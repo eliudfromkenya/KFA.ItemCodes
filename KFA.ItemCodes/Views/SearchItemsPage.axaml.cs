@@ -10,7 +10,8 @@ namespace KFA.ItemCodes.Views
     public partial class SearchItemsPage : Window
     {
         internal List<ItemCode> ItemCodes { get; set; }
-        public string SearchBasedName { get; internal set; }
+        public string? SearchBasedName { get; internal set; }
+        public string? SearchBasedItemCode { get; internal set; }
 
         public SearchItemsPage()
         {
@@ -19,20 +20,36 @@ namespace KFA.ItemCodes.Views
             this.FindControl<Button>("BtnSearchBackwards").Click += (xx,yy) => Search_Forward();
             this.FindControl<Button>("BtnSearchForwards").Click += (xx,yy) => Search_Backward();
             this.FindControl<Button>("BtnClose").Click += (xx,yy) => this.Close();
+            var dgItems = this.FindControl<DataGrid>("DgItems");
+            dgItems.SelectionChanged += (xx, yy) =>
+            {
+                try
+                {
+                    if (dgItems.SelectedItem != null)
+                        EditItemPage.ItemCode =
+                           ((dynamic)dgItems.SelectedItem)
+                           .itemFrom;
+                }
+                catch { }
+            };
 
             Functions.RunOnBackground(() =>
             {
                 try
                 {
-                    if (!string.IsNullOrEmpty(SearchBasedName))
+                    if(CustomValidations.IsValidItemCode(SearchBasedItemCode ?? " "))
+                    {
+                        Functions.RunOnMain(() => this.FindControl<AutoCompleteBox>("TxtSearch").Text = SearchBasedItemCode);
+                    }
+                    else if (!string.IsNullOrEmpty(SearchBasedName))
                     {
                         var code = ItemChecker
                         .SearchItemByName(SearchBasedName, ItemCodes)?
                         .FirstOrDefault()?
                         .Code;
 
-                        if (CustomValidations.IsValidItemCode(code)) 
-                            Functions.RunOnMain(()=>this.FindControl<AutoCompleteBox>("TxtSearch").Text=code);
+                        if (CustomValidations.IsValidItemCode(code ?? ""))
+                            Functions.RunOnMain(() => this.FindControl<AutoCompleteBox>("TxtSearch").Text = code);
                     }
                 }
                 catch { }
@@ -42,10 +59,11 @@ namespace KFA.ItemCodes.Views
         private void Search_Backward()
         {
             try
-            {
+            { 
+                var dgItems = this.FindControl<DataGrid>("DgItems");
                 var code = this.FindControl<AutoCompleteBox>("TxtSearch").Text;
                 var items = ItemChecker.SearchItemForward(code, ItemCodes);
-                this.FindControl<DataGrid>("DgItems").Items = items.Select(v => new
+                dgItems.Items = items.Select(v => new
                 {
                     v.itemFrom,
                     v.itemTo,

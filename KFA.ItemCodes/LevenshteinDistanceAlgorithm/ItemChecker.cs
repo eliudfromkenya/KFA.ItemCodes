@@ -10,7 +10,7 @@ internal class ItemChecker
     internal static List<(string itemFrom, string itemTo, int count)> SearchItemForward(string itemCodeToSearch, List<LevenshteinDistanceAlgorithm.ItemCode> allItemsCodes)
     {
         List<(string itemFrom, string itemTo, int count)> objs = new();
-
+        int xCount = 0; 
         try
         {
             var ans = itemCodeToSearch;
@@ -28,12 +28,15 @@ internal class ItemChecker
                             itemFrom = i;
                     }
                     else
-                    {
+                    { 
                         if (itemFrom != -1)
-                        {
-                            objs.Add((itemFrom.ToString("000000"), (i - 1).ToString("000000"), i - itemFrom - 1));
+                        { 
+                            int diff = 0;
+                            objs.Add((itemFrom.ToString("000000"), (i - 1).ToString("000000"), diff = i - itemFrom - 1));
                             itemFrom = -1;
-                            if (objs.Count >= 30)
+
+                            xCount += diff;
+                            if (objs.Count >= 30 || xCount > 1200)
                                 return objs;
                         }
                     }
@@ -50,7 +53,7 @@ internal class ItemChecker
     internal static List<(string itemFrom, string itemTo, int count)> SearchItemBackward(string itemCodeToSearch, List<LevenshteinDistanceAlgorithm.ItemCode> allItemsCodes)
     {
         List<(string itemFrom, string itemTo, int count)> objs = new();
-
+        int xCount = 0; 
         try
         {
             var ans = itemCodeToSearch;
@@ -62,6 +65,7 @@ internal class ItemChecker
                 for (int i = obj - 1; i >= 10001; i--)
                 {
                     var code = i.ToString("000000");
+                  
                     if (!allItemsCodes.Any(n => n.Code == code))
                     {
                         if (itemTo == -1)
@@ -71,9 +75,11 @@ internal class ItemChecker
                     {
                         if (itemTo != -1)
                         {
-                            objs.Add(((i + 1).ToString("000000"), itemTo.ToString("000000"), itemTo - (i + 1)));
+                            int diff = 0;
+                            objs.Add(((i + 1).ToString("000000"), itemTo.ToString("000000"), diff = itemTo - (i + 1)));
                             itemTo = -1;
-                            if (objs.Count >= 30)
+                            xCount += diff;
+                            if (objs.Count >= 20 || xCount > 1200)
                                 return objs;
                         }
                     }

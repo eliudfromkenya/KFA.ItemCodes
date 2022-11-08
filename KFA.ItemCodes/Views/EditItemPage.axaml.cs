@@ -17,7 +17,7 @@ namespace KFA.ItemCodes.Views
     public partial class EditItemPage :Window
     {
         internal string Supplier;
-        internal bool isUpdate = false;
+        internal static bool isUpdate = false;
         static internal string ItemCode, ItemName;
 
           public EditItemPage()
@@ -86,7 +86,7 @@ namespace KFA.ItemCodes.Views
                           List<ItemCode> items = new() { new ItemCode { Code = itemCode, Name = itemName, OriginalName = itemName, Distributor = supplier } };
                            Matcher.CheckCodes(ref items);
                           MainWindowViewModel.models.AddRange(items);
-                            Functions.Notify($"Successfully added item {itemCode} - {ItemName}");
+                            Functions.Notify($"Successfully added item {itemCode} - {itemName}");
                       }
 
                       this.Close();

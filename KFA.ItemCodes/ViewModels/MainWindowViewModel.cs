@@ -89,6 +89,7 @@ namespace KFA.ItemCodes.ViewModels
             {
                 var page = new SearchItemsPage
                 {
+                    SearchBasedItemCode = SelectedItem?.Code,
                     SearchBasedName = MainWindow.FindControl<AutoCompleteBox>("TxtSearch")?.Text,
                     ItemCodes = Models?.ToList() ?? new(),
                     WindowState = WindowState.Maximized
@@ -110,12 +111,12 @@ namespace KFA.ItemCodes.ViewModels
 
                   EditItemPage.ItemCode = SelectedItem?.Code;
                   EditItemPage.ItemName = SelectedItem?.OriginalName;
+                  EditItemPage.isUpdate = true;
 
                   var page = new EditItemPage
                   {
                       WindowState = WindowState.Maximized,
-                      Supplier = SelectedItem?.Distributor,
-                      isUpdate = true
+                      Supplier = SelectedItem?.Distributor
                   };
                   page.FindControl<AutoCompleteBox>("TxtItemCode").IsEnabled = false;
                   page.Show();
@@ -137,10 +138,10 @@ namespace KFA.ItemCodes.ViewModels
                  {
                      EditItemPage.ItemName = MainWindow.FindControl<AutoCompleteBox>("TxtSearch")?.Text;
 
+                     EditItemPage.isUpdate = false;
                      var page = new EditItemPage
                      {
-                         WindowState = WindowState.Maximized,
-                         isUpdate = false,
+                         WindowState = WindowState.Maximized                         
                      };
 
                      page.Show();

@@ -13,80 +13,98 @@ namespace LevenshteinDistanceAlgorithm
         {
             codes.ForEach(col =>
             {
-                try
+                var code = CheckCodesName(col.Name);
+                col.MeasureUnit = code.unitOfMeasure;
+                col.Name = CheckHarmonizedName(code.name);
+                col.GroupName=code.groupName;
+                col.HarmonizedGroupName=code.harmonizedGroupName;
+                col.HarmonizedName=code.harmonizedName;
+            });
+        }
+
+        public static (string? name, string? unitOfMeasure, string? groupName, string? harmonizedName, string? harmonizedGroupName) CheckCodesName(string? name, string? distributor = null)
+        {
+           try
                 {
-                    if (!string.IsNullOrWhiteSpace(col.Distributor)
-                    && !int.TryParse(col.Distributor ?? "", out int _))
-                        col.Name = $"{col.Distributor} {col.Name}";
+                    if (!string.IsNullOrWhiteSpace(distributor)
+                    && !int.TryParse(distributor ?? "", out int _))
+                        name = $"{distributor} {name}";
                 }
                 catch (Exception ex) { Functions.Notify("Error 1 " + ex.ToString()); }
 				
 				try
                 {
-					col.Name = col.Name?.Replace("x", " ")?.Replace("X", " ");
+					name = name?.Replace("x", "X");
+                    if(Regex.IsMatch(name??"", "X *[0-9]+ *[a-zA-Z]+$"))
+                    {
+                       var value = Regex.Match(name ?? "", "X *[0-9]+ *[a-zA-Z]+$").Value;
+                       name = name?.Replace(value, value[1..]);
+                    }
                 }
                 catch (Exception ex) { Functions.Notify("Error 1 " + ex.ToString()); }
 
                 try
                 {
                     var pattern = @"\(.*[A-Z]+.*\)";
-                    if (Regex.Match(col.Name ?? "", pattern).Success)
+                    if (Regex.Match(name ?? "", pattern).Success)
                     {
-                        var value = Regex.Match(col.Name ?? "", pattern).Value;
-                        col.Name = $"{value[1..^1]} {col.Name?.Replace(value, "")}";
+                        var value = Regex.Match(name ?? "", pattern).Value;
+                        name = $"{value[1..^1]} {name?.Replace(value, "")}";
                     }
-                    col.Name = col?.Name?.Replace(")", " ").Replace("(", " ");
+                    name = name?.Replace(")", " ").Replace("(", " ");
                 }
                 catch (Exception ex) { Functions.Notify("Error 2A " + ex.ToString()); }
 
                 try
                 {
                     var pattern = @"\{.*[A-Z]+.*\}";
-                    if (Regex.Match(col.Name ?? "", pattern).Success)
+                    if (Regex.Match(name ?? "", pattern).Success)
                     {
-                        var value = Regex.Match(col.Name ?? "", pattern).Value;
-                        col.Name = $"{value[1..^1]} {col.Name?.Replace(value, "")}";
+                        var value = Regex.Match(name ?? "", pattern).Value;
+                        name = $"{value[1..^1]} {name?.Replace(value, "")}";
                     }
-                    col.Name = col?.Name?.Replace("}", " ").Replace("{", " ");
+                    name = name?.Replace("}", " ").Replace("{", " ");
                 }
                 catch (Exception ex) { Functions.Notify("Error 2A " + ex.ToString()); }
 
                 try
                 {
                     var pattern = @"\[.*[A-Z]+.*\]";
-                    if (Regex.Match(col.Name ?? "", pattern).Success)
+                    if (Regex.Match(name ?? "", pattern).Success)
                     {
-                        var value = Regex.Match(col.Name ?? "", pattern).Value;
-                        col.Name = $"{value[1..^1]} {col.Name?.Replace(value, "")}";
+                        var value = Regex.Match(name ?? "", pattern).Value;
+                        name = $"{value[1..^1]} {name?.Replace(value, "")}";
                     }
-                    col.Name = col?.Name?.Replace("]", " ").Replace("[", " ");
+                    name = name?.Replace("]", " ").Replace("[", " ");
                 }
                 catch (Exception ex) { Functions.Notify("Error 2A " + ex.ToString()); }
-                col.Name = col.Name?.ToUpper();
+                name = name?.ToUpper();
                 try
                 {
                     var pattern = @"\"".*[A-Z]+.*\""";
-                    if (Regex.Match(col.Name ?? "", pattern).Success)
+                    if (Regex.Match(name ?? "", pattern).Success)
                     {
-                        var value = Regex.Match(col.Name ?? "", pattern).Value;
-                        col.Name = $"{value[1..^1]} {col.Name?.Replace(value, "")}";
+                        var value = Regex.Match(name ?? "", pattern).Value;
+                        name = $"{value[1..^1]} {name?.Replace(value, "")}";
                     }
                 }
                 catch (Exception ex) { Functions.Notify("Error 2B " + ex.ToString()); }
                 try
                 {
-                    col.Name = CheckName(col.Name);
+                    name = CheckName(name);
                 }
                 catch (Exception ex) { Functions.Notify("Error 2B " + ex.ToString()); }
+
+                string? unitOfMeasure = null, groupName = null, harmonizedName=null, harmonizedGroupName = null;
                 try
                 {
                     const string pattern = @"([\d]+\.?[\d]* *[a-zA-Z]{1,5} *$)|([\d]* *x *[\d]+ *[a-zA-Z]{1,5} *$)|([\d]* *\* *[\d]+ *[a-zA-Z]{1,5} *$)|([\d]+ *[a-zA-Z]{1,5} *x *[\d]* *$)|([\d]+ *[a-zA-Z]{1,5} *\* *[\d]* *$)";
 
-                    if (Regex.Match(col.Name ?? "", pattern).Success)
-                        col.MeasureUnit = Regex.Match(col.Name ?? "", pattern).Value?.Replace("  ", " ")?.Trim();
-                    col.GroupName = col.Name?.Trim();
-                    if (col.MeasureUnit?.Length > 1)
-                        col.GroupName = col.Name?.Replace(col.MeasureUnit ?? "", "")?.Trim();
+                    if (Regex.Match(name ?? "", pattern).Success)
+                        unitOfMeasure = Regex.Match(name ?? "", pattern).Value?.Replace("  ", " ")?.Trim();
+                    groupName = name?.Trim();
+                    if (unitOfMeasure?.Length > 1)
+                        groupName = name?.Replace(unitOfMeasure ?? "", "")?.Trim();
                 }
                 catch (Exception ex) { Functions.Notify("Error 3 " + ex.ToString()); }
                 try
@@ -103,22 +121,21 @@ namespace LevenshteinDistanceAlgorithm
 
                     var companyReplaces = new Dictionary<string, string[]>
                     {
-                        { "JOJEMI",new[]{"JOJ"} },
+                        { "JOJEMI",new[]{"JOJ","JOJE", "JJ"} },
                         {"SIMLAW", new[]{ "SIM" } },
-                        {"ULTRAVETIS",new []{"ULTRA","ULT"} },
+                        {"ULTRAVETIS",new []{"ULTRA","ULT","ULTRAVET","ULTVET","ULT VET"} },
                         {"GRIFFATON", new[]{"GRI", "GRIFF","GRIF", } },
                         {"HYGRO",new []{"HYGROTECH","HGRO"} },
-                        {"L", new[]{"LITER", "LT","LTR"} }
+                        {"E.A", new[]{"EA", "EASTAFRICA","EAST AFR", "E.AFR"} },
+                        {"ROYAL", new[]{"RYL", "ROYL","RL"} },
+                        {"SEED-CO", new[]{"SEED", "SEED CO","SEEDCO","SC"} }
                     };
-                    //fert, cabb, D/ , S/Loaf, EGG P/BLACK BEAUTY,EGG PLANT B/B , EGG PLANT BEAUTY,L/MASH,L/STOCK,M/SALVE,M SALVE,H/PROS,H/PHOS,H/PHO, L/STOCK,D/LICK,S/LICK,HI PHOS,R/CREOLE,S/D LICK,M/MAKER,S  D/LICK,S/D LICK,S/LICK,D/MEAL,SUGARLOAF,D/LICK, D.LICK, D/LICK,M/MAKER,M. MAKER,TOMATOE,HIGHPHOS,H/PHOSPOROUS,HI-PHOS,S/BABY,H/PHOSPHOROUS,
-                    //start with "
-                    //replace name double space
-                    // LTD. from distributor before matching
+                   
                     foreach (var item in replaces)
                     {
                         try
                         {
-                            col.Name = String.Join(" ", col?.Name?.Split(' ').Select(x =>
+                            name = String.Join(" ", name?.Split(' ').Select(x =>
                              {
                                  foreach (var item in companyReplaces)
                                      foreach (var obj in item.Value)
@@ -133,28 +150,28 @@ namespace LevenshteinDistanceAlgorithm
                         }
                         var objs = item.Value.SelectMany(n => new[] { n, $"{n}S" }).ToList();
                         var pattern = $"[a-zA-Z]+";
-                        if (Regex.Match(col.MeasureUnit ?? "", pattern).Success)
+                        if (Regex.Match(unitOfMeasure ?? "", pattern).Success)
                         {
-                            var value = Regex.Match(col.MeasureUnit ?? "", pattern).Value;
+                            var value = Regex.Match(unitOfMeasure ?? "", pattern).Value;
                             var replacer = objs.FirstOrDefault(m => m == value.ToUpper());
                             if (!string.IsNullOrWhiteSpace(replacer) && !(value == item.Key))
-                                col.MeasureUnit = col.MeasureUnit?.Replace(value, item.Key);
+                                unitOfMeasure = unitOfMeasure?.Replace(value, item.Key);
                             if ($"{item.Key}S" == value.ToUpper() && !(value == item.Key))
-                                col.MeasureUnit = col.MeasureUnit?.Replace(value, item.Key);
+                                unitOfMeasure = unitOfMeasure?.Replace(value, item.Key);
                         }
                     }
                 }
                 catch (Exception ex) { Functions.Notify("Error 4 " + ex.ToString()); }
                 try
                 {
-                    col.HarmonizedName = $@"{string.Join(" ", Regex.Matches(col.GroupName ?? "", "[0-9a-zA-Z]+")
+                    harmonizedName = $@"{string.Join(" ", Regex.Matches(groupName ?? "", "[0-9a-zA-Z]+")
                    .Select(v => v.Value?.ToUpper()?.Trim())
-                   .Distinct().OrderBy(c => c))} {col.MeasureUnit?.Trim()}".Replace(" ", "");
+                   .Distinct().OrderBy(c => c))} {unitOfMeasure?.Trim()}".Replace(" ", "");
                 }
                 catch (Exception ex) { Functions.Notify("Error 5 " + ex.ToString()); }
                 try
                 {
-                    col.HarmonizedGroupName = string.Join(" ", Regex.Matches(col.GroupName ?? "", "[0-9a-zA-Z]+")
+                    harmonizedGroupName = string.Join(" ", Regex.Matches(groupName ?? "", "[0-9a-zA-Z]+")
                    .Select(v => v.Value?.ToUpper()?.Trim())
                    .Distinct().OrderBy(c => c)).Replace(" ", "");
                 }
@@ -162,14 +179,15 @@ namespace LevenshteinDistanceAlgorithm
 
                 try
                 {
-                    col.HarmonizedGroupName = CheckHarmonizedName(col.HarmonizedGroupName);
-                    col.HarmonizedName = CheckHarmonizedName(col.HarmonizedName);
+                    harmonizedGroupName = CheckHarmonizedName(harmonizedGroupName);
+                    harmonizedName = CheckHarmonizedName(harmonizedName);
                 }
                 catch (Exception ex) { Functions.Notify("Error 5 " + ex.ToString()); }
-            });
+
+            return (name, unitOfMeasure, groupName, harmonizedName, harmonizedGroupName);
         }
 
-        private static string? CheckHarmonizedName(string? name)
+        public static string? CheckHarmonizedName(string? name, string? itemCode = null)
         {
             if (string.IsNullOrWhiteSpace(name))
                 return name;
@@ -203,11 +221,41 @@ namespace LevenshteinDistanceAlgorithm
 
             if (name.Contains("CALIFORNIA W ") && !name.Contains("CALIFORNIA WONDER "))
                 name = name.Replace("CALIFORNIA W ", "CALIFORNIA WONDER ");
+            if (name.Contains("CALIFONIA") && !name.Contains("CALIFORNIA"))
+                name = name.Replace("CALIFONIA", "CALIFORNIA");
+            if (name.Contains("WONDERG") && !name.Contains("WONDER G"))
+                name = name.Replace("WONDERG", "WONDER G");
+            if (name.Contains("CROPW") && !name.Contains("CROP W"))
+                name = name.Replace("CROPW", "CROP W");
+            if (name.Contains("C WONDER") && !name.Contains("CALIFORNIA WONDER"))
+                name = name.Replace("C WONDER", "CALIFORNIA WONDER");
+            if (name.Contains("C.WONDER") && !name.Contains("CALIFORNIA WONDER"))
+                name = name.Replace("C.WONDER", "CALIFORNIA WONDER");
+            if (name.Contains("C/WONDER") && !name.Contains("CALIFORNIA WONDER"))
+                name = name.Replace("C/WONDER", "CALIFORNIA WONDER");
 
+            if (name?.Contains("G")??false  || (itemCode?.StartsWith("42") ?? false))
+            {
+                if (name.Contains("C W ") && !name.Contains("CALIFORNIA WONDER "))
+                    name = name.Replace("C W ", " CALIFORNIA WONDER ");
+                if (name.Contains("C.W ") && !name.Contains("CALIFORNIA WONDER "))
+                    name = name.Replace("C.W ", " CALIFORNIA WONDER ");
+                if (name.Contains("C/W ") && !name.Contains("CALIFORNIA WONDER "))
+                    name = name.Replace("C/W ", " CALIFORNIA WONDER ");
+            }
+            if (true || (itemCode?.StartsWith("07") ?? false))
+            {
+                if (name.Contains("HYBRID"))
+                    name = name.Replace("HYBRID", "H");
+                if (name.Contains("HYBREED"))
+                    name = name.Replace("HYBREED", "H");
+                if (name.Contains("MAIZE SEED") && !name.Contains("SEED-CO"))
+                    name = name.Replace("MAIZE SEED", "H.S.M");
+            }
             return name.Replace("  ", " ").Replace("LTD.", "").Replace("LTD", "");
         }
 
-        private static string? CheckName(string? name)
+        public static string? CheckName(string? name)
         {
             if (string.IsNullOrWhiteSpace(name))
                 return name;

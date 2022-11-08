@@ -3,6 +3,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
 using KFA.ItemCodes.Classes;
 using KFA.ItemCodes.ViewModels;
+using LevenshteinDistanceAlgorithm;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
@@ -48,8 +49,8 @@ namespace KFA.ItemCodes.Views
                         return;
                     }
 
-                    if (advancedSearch == null)
-                        advancedSearch = rbAdvSearch?.IsChecked;
+                    advancedSearch ??= rbAdvSearch?.IsChecked;
+                    text = Matcher.CheckCodesName(Matcher.CheckHarmonizedName(text?.ToUpper())).name;
                     dgItems.Items = SearchService.SearchItemCode(text, ViewModel?.Models, advancedSearch ?? false);
                 }
                 catch (Exception ex)

@@ -14,11 +14,18 @@
     <EmbeddedResource Remove="Models\**" />
     <None Remove="Models\**" />
     <None Remove=".gitignore" />
+    <None Remove="Skins\AutoCompleteBox.xaml" />
     <None Remove="Skins\Button.xaml" />
     <None Remove="Skins\DataGrid.xaml" />
     <None Remove="Skins\RadioButton.xaml" />
+    <None Remove="Skins\TextBlock.xaml" />
+    <None Remove="Skins\TextBox.xaml" />
+    <None Remove="Skins\Tooltip.xaml" />
   </ItemGroup>
   <ItemGroup>
+    <AvaloniaResource Include="Skins\AutoCompleteBox.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </AvaloniaResource>
     <AvaloniaResource Include="Skins\Button.xaml">
       <Generator>MSBuild:Compile</Generator>
     </AvaloniaResource>
@@ -26,6 +33,15 @@
       <Generator>MSBuild:Compile</Generator>
     </AvaloniaResource>
     <AvaloniaResource Include="Skins\RadioButton.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </AvaloniaResource>
+    <AvaloniaResource Include="Skins\TextBlock.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </AvaloniaResource>
+    <AvaloniaResource Include="Skins\TextBox.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </AvaloniaResource>
+    <AvaloniaResource Include="Skins\Tooltip.xaml">
       <Generator>MSBuild:Compile</Generator>
     </AvaloniaResource>
   </ItemGroup>

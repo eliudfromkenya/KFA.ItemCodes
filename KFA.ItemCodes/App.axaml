@@ -11,7 +11,11 @@
 		<StyleInclude Source="avares://Citrus.Avalonia/Citrus.xaml"/>
 	    <StyleInclude Source="avares://Citrus.Avalonia/Sea.xaml"/> 
       <StyleInclude Source="resm:Avalonia.Controls.DataGrid.Themes.Default.xaml?assembly=Avalonia.Controls.DataGrid" />
-      <StyleInclude Source="avares://KFA.ItemCodes/Skins/DataGrid.xaml"/>
+      <StyleInclude Source="avares://KFA.ItemCodes/Skins/AutoCompleteBox.xaml"/>
+     <StyleInclude Source="avares://KFA.ItemCodes/Skins/TextBlock.xaml"/>
+     <StyleInclude Source="avares://KFA.ItemCodes/Skins/TextBox.xaml"/>
+     <StyleInclude Source="avares://KFA.ItemCodes/Skins/Tooltip.xaml"/>
+     <StyleInclude Source="avares://KFA.ItemCodes/Skins/DataGrid.xaml"/>
       <StyleInclude Source="avares://KFA.ItemCodes/Skins/RadioButton.xaml"/>
          <!--<StyleInclude Source="avares://KFA.ItemCodes/Skins/ProgressRing.xaml"/>-->
       <!--<StyleInclude Source="avares://KFA.ItemCodes/Skins/Button.xaml"/>-->
