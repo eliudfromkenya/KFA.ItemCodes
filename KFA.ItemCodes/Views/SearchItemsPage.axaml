@@ -1,0 +1,42 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" Width="800" 
+		WindowState="FullScreen" SystemDecorations="BorderOnly" 
+        x:Class="KFA.ItemCodes.Views.SearchItemsPage" Title="SearchItemsPage">
+  
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="10" />
+      <ColumnDefinition Width="Auto" />
+      <ColumnDefinition Width="200" />
+      <ColumnDefinition Width="Auto" />
+      <ColumnDefinition Width="Auto" />
+	   <ColumnDefinition Width="*" />
+	  <ColumnDefinition Width="Auto" />
+      <ColumnDefinition Width="10" />
+    </Grid.ColumnDefinitions>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="10" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="10" />
+    </Grid.RowDefinitions>
+    <Label Grid.Column="1" VerticalAlignment="Center" Grid.Row="1" Content="Start Item Code" />
+    <AutoCompleteBox Grid.Column="2" Grid.Row="1" MinWidth="150" Margin="0" Name="TxtSearch" BorderBrush="LightBlue" VerticalAlignment="Center" BorderThickness="1" />
+    <Button Name="BtnSearchBackwards" Grid.Column="3" Margin="10" VerticalAlignment="Center" MinWidth="70" Grid.Row="1" Content="Search Backwards" HorizontalAlignment="Right" />
+    <Button Name="BtnSearchForwards" Grid.Column="4" Margin="10" VerticalAlignment="Center" MinWidth="70" Grid.Row="1" Content="Search Forwards" HorizontalAlignment="Right" />
+	<Button Name="BtnClose" Grid.Column="6" Margin="10" Background="Red" VerticalAlignment="Center" MinWidth="70" Grid.Row="1" Content="Close" HorizontalAlignment="Right" />
+    
+      <DataGrid HorizontalAlignment="Stretch" Name="DgItems" Grid.Column="1" Grid.ColumnSpan="4" Grid.Row="2" BorderThickness="1" RowHeight="{Binding ListRowHeight}" Width="700" Items="{Binding Models}" Background="Transparent" FontSize ="28"
+           SelectionMode="Extended" HorizontalScrollBarVisibility="Auto" VerticalAlignment="Stretch"
+           MinHeight ="100" >
+        <DataGrid.Columns >
+          <DataGridCheckBoxColumn
+            Header="✔" Binding="{Binding RecordIsSelected}" />
+           <DataGridTextColumn Binding="{Binding Text}" MinWidth="500" Header="Free Item Codes" />
+         </DataGrid.Columns >
+      </DataGrid >
+   </Grid>
+</Window>
