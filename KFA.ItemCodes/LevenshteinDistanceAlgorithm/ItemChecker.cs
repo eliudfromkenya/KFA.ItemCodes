@@ -97,9 +97,11 @@ internal class ItemChecker
 
             var body = new StringBuilder();
 
-            return allItemsCodes
+            var items = allItemsCodes.Where(v => v.Code == ans).ToList();
+            items.AddRange(allItemsCodes
                 .OrderBy(n => Matcher.LaveteshinDistanceAlgorithmBody(n.HarmonizedName ?? "", ans ?? ""))
-                .Take(40).ToList();
+                .Take(40));
+            return items;
         }
         catch (Exception ex)
         {

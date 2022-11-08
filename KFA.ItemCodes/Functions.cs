@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using KFA.ItemCodes.Classes;
+using KFA.ItemCodes.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -83,12 +84,12 @@ namespace KFA.ItemCodes
 
         internal static void NotifyError(Exception ex)
         {
-            
+            MainWindowViewModel.ErrorNotifications.OnNext(("Error", ex.Message, ex));
         }
 
         internal static void NotifyError(string message, string v, Exception ex)
         {
-            
+            MainWindowViewModel.ErrorNotifications.OnNext((v, message, ex));
         }
 
         public static void NewContentDialog<TContentDialog>(this WindowBase owner,
@@ -205,9 +206,9 @@ namespace KFA.ItemCodes
             });
         }
 
-        internal static void Notify(string v)
+        internal static void Notify(string message, string title = "Codes")
         {
-            throw new NotImplementedException();
+            MainWindowViewModel.Notifications.OnNext((title, message));
         }
     }
 }

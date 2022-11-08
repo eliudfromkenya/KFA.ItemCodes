@@ -10,6 +10,8 @@ namespace KFA.ItemCodes.Views
     public partial class SearchItemsPage : Window
     {
         internal List<ItemCode> ItemCodes { get; set; }
+        public string SearchBasedName { get; internal set; }
+
         public SearchItemsPage()
         {
             InitializeComponent();
@@ -17,6 +19,24 @@ namespace KFA.ItemCodes.Views
             this.FindControl<Button>("BtnSearchBackwards").Click += (xx,yy) => Search_Forward();
             this.FindControl<Button>("BtnSearchForwards").Click += (xx,yy) => Search_Backward();
             this.FindControl<Button>("BtnClose").Click += (xx,yy) => this.Close();
+
+            Functions.RunOnBackground(() =>
+            {
+                try
+                {
+                    if (!string.IsNullOrEmpty(SearchBasedName))
+                    {
+                        var code = ItemChecker
+                        .SearchItemByName(SearchBasedName, ItemCodes)?
+                        .FirstOrDefault()?
+                        .Code;
+
+                        if (CustomValidations.IsValidItemCode(code)) 
+                            Functions.RunOnMain(()=>this.FindControl<AutoCompleteBox>("TxtSearch").Text=code);
+                    }
+                }
+                catch { }
+            });
         }
 
         private void Search_Backward()
@@ -31,7 +51,8 @@ namespace KFA.ItemCodes.Views
                     v.itemTo,
                     v.count,
                     Text = v.count == 0 ? v.itemFrom : $"{v.itemFrom}-{v.itemTo} ({v.count + 1} spaces)"
-                }); ;
+                });
+                EditItemPage.ItemCode = items?.First().itemFrom;
             }
             catch (Exception ex)
             {
@@ -51,7 +72,8 @@ namespace KFA.ItemCodes.Views
                     v.itemTo,
                     v.count,
                     Text = v.count == 0 ? v.itemFrom : $"{v.itemFrom}-{v.itemTo} ({v.count + 1} spaces)"
-                }); ;
+                }); 
+                EditItemPage.ItemCode = items?.First().itemFrom;
             }
             catch (Exception ex)
             {
