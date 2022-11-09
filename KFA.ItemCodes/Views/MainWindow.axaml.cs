@@ -61,7 +61,19 @@ namespace KFA.ItemCodes.Views
 
             rbAdvSearch.Checked += (xx, yy) => ReloadDataGrid(true);
             rbNormalSearch.Checked += (xx, yy) => ReloadDataGrid(false);
-            this.FindControl<Button>("BtnRefresh").Click += (xx, yy) => ReloadDataGrid();
+            this.FindControl<Button>("RefreshButton").Click += (xx, yy) =>
+            {
+                try
+                {
+                    if (DataContext is MainWindowViewModel vm)
+                        vm.RefreshData();
+                    ReloadDataGrid();
+                }
+                catch (Exception ex)
+                {
+                    Functions.NotifyError(ex);
+                }
+            };
             searchCtrl.Events().TextChanged
               .Throttle(TimeSpan.FromMilliseconds(500))
               .Subscribe(cc => Functions.RunOnMain(() =>

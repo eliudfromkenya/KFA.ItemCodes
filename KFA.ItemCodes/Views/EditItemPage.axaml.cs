@@ -18,7 +18,7 @@ namespace KFA.ItemCodes.Views
     {
         internal string Supplier;
         internal static bool isUpdate = false;
-        static internal string ItemCode, ItemName;
+        static internal string ItemCode, ItemName, ItemGroup;
 
           public EditItemPage()
         {
@@ -30,10 +30,20 @@ namespace KFA.ItemCodes.Views
             this.FindControl<Button>("BtnClose").Click += (dd, ff) => this.Close();
 
             this.FindControl<TextBlock>("TxbHeader").Text = isUpdate ? "UPDATING ITEM" : "ADDING ITEM";
-            this.FindControl<AutoCompleteBox>("TxtItemCode").Text = ItemCode;
+
+            var txtCode = this.FindControl<AutoCompleteBox>("TxtItemCode");
+            var txtGroup = this.FindControl<TextBlock>("TxbItemGroup");
+            txtCode.Text = ItemCode;
             this.FindControl<AutoCompleteBox>("TxtItemName").Text = ItemName?.ToUpper();
             this.FindControl<AutoCompleteBox>("TxtItemSupplier").Text = Supplier?.ToUpper();
-
+            txtCode.TextChanged += (vv, yy) =>
+            {
+                try
+                {
+                    txtGroup.Text = MainWindowViewModel.itemGroups.FirstOrDefault(m => m.GroupId == txtCode.Text?[..2])?.GroupName;
+                }
+                catch { }
+            };
             if (isUpdate)
                 this.FindControl<AutoCompleteBox>("TxtItemCode").Focusable = false;
             

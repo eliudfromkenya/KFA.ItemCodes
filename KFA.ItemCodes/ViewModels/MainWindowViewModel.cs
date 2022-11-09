@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using KFA.ItemCodes.Classes;
+using KFA.ItemCodes.LevenshteinDistanceAlgorithm;
 using KFA.ItemCodes.Views;
 using LevenshteinDistanceAlgorithm;
 using ReactiveUI;
@@ -19,6 +20,7 @@ namespace KFA.ItemCodes.ViewModels
         private ItemCode selectedItem;
         private string message;
         private string errorMessage;
+        internal static ObservableCollection<ItemGroup> itemGroups;
 
         public string? Message { get => message; set => this.RaiseAndSetIfChanged(ref message, value); }
         public string? ErrorMessage { get => errorMessage; set => this.RaiseAndSetIfChanged(ref errorMessage, value); }
@@ -32,15 +34,16 @@ namespace KFA.ItemCodes.ViewModels
         public static BehaviorSubject<(string? title, string? message)> Notifications { get; set; } = new((null, null));
 
         public ItemCode SelectedItem { get => selectedItem; set => this.RaiseAndSetIfChanged(ref selectedItem, value); }
-        public ObservableCollection<LevenshteinDistanceAlgorithm.ItemCode> Models { get => models; set => this.RaiseAndSetIfChanged(ref models, value); }
+        public ObservableCollection<ItemCode> Models { get => models; set => this.RaiseAndSetIfChanged(ref models, value); }
+        public ObservableCollection<ItemGroup> ItemGroups { get => itemGroups; set => itemGroups = value; }
 
         public MainWindowViewModel()
         {
-            RefreshDataCommand = ReactiveCommand.CreateFromTask(RefreshData);
+            RefreshDataCommand = ReactiveCommand.CreateFromTask(async() => RefreshData());
             AddItemCommand = ReactiveCommand.CreateFromTask(AddItem);
             UpdateItemCommand = ReactiveCommand.CreateFromTask(UpdateItemCode);
             SearchItemCodeCommand = ReactiveCommand.CreateFromTask(SearchItemCode);
-            AsyncUtil.RunSync(RefreshData());
+            RefreshData();
             Notifications.Subscribe(OnMessageRecieved);
             ErrorNotifications.Subscribe(OnErrorMessageRecieved);
         }
@@ -52,9 +55,9 @@ namespace KFA.ItemCodes.ViewModels
                 try
                 {
                     ErrorMessage = Message = null;
-                    ErrorMessage = 
-                        string.IsNullOrWhiteSpace(tt.message) 
-                            ? (tt.ex?.Message) 
+                    ErrorMessage =
+                        string.IsNullOrWhiteSpace(tt.message)
+                            ? (tt.ex?.Message)
                             : tt.message;
                 }
                 catch (Exception ex)
@@ -141,7 +144,7 @@ namespace KFA.ItemCodes.ViewModels
                      EditItemPage.isUpdate = false;
                      var page = new EditItemPage
                      {
-                         WindowState = WindowState.Maximized                         
+                         WindowState = WindowState.Maximized
                      };
 
                      page.Show();
@@ -155,13 +158,26 @@ namespace KFA.ItemCodes.ViewModels
              }));
         }
 
-        private async Task RefreshData()
+        internal void RefreshData()
         {
             Functions.RunOnBackground(() =>
-          {
-              var models = new ObservableCollection<ItemCode>(DbService.RefreshMySQLItems());
-              Functions.RunOnMain(() => Models = models);
-          }, 1200);
+            {
+                try
+                {
+                    var (items, groups) = DbService.RefreshMySQLItems();
+                    var models = new ObservableCollection<ItemCode>(items);
+                    var itemGrps = new ObservableCollection<ItemGroup>(groups);
+                    Functions.RunOnMain(() =>
+                    {
+                        Models = models;
+                        ItemGroups = itemGrps;
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Functions.NotifyError(ex);
+                }
+            }, 1200);
         }
     }
 }

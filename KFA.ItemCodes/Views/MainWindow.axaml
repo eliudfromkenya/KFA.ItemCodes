@@ -46,15 +46,16 @@
         <AutoCompleteBox Grid.Column="2"  MinWidth="150" Margin="0" Name="TxtSearch" BorderBrush="LightBlue" VerticalAlignment="Center" BorderThickness="1" />
         <Button Name="BtnRefresh" Grid.Column="3" Margin="10" VerticalAlignment="Center" MinWidth="70" IsDefault="True" Content="Go" HorizontalAlignment="Right" />
       </Grid>      
-      <DataGrid HorizontalAlignment="Stretch" Name="DgItems"  Grid.Row="1" BorderThickness="1" RowHeight="{Binding ListRowHeight}" Width="900" Items="{Binding Models}" FontSize="24" Background="Transparent" SelectedItem="{Binding SelectedItem}"
+      <DataGrid HorizontalAlignment="Stretch" Name="DgItems"  Grid.Row="1" BorderThickness="1" RowHeight="{Binding ListRowHeight}" Width="1000" Items="{Binding Models}" FontSize="24" Background="Transparent" SelectedItem="{Binding SelectedItem}"
            SelectionMode="Extended" HorizontalScrollBarVisibility="Auto" VerticalAlignment="Stretch"
            MinHeight ="100" >
         <DataGrid.Columns >
           <DataGridCheckBoxColumn
             Header="✔" Binding="{Binding RecordIsSelected}" />
           <DataGridTextColumn Binding="{Binding Code}" MinWidth="100" Header="Item Code" />
-          <DataGridTextColumn Binding="{Binding OriginalName}" MinWidth="500" Header="Item Name" />
+          <DataGridTextColumn Binding="{Binding OriginalName}" MinWidth="300" Header="Item Name" />
           <DataGridTextColumn Binding="{Binding Distributor}" MinWidth="45" Header="Distributor" />
+          <DataGridTextColumn Binding="{Binding ItemGroup}" MinWidth="100" Header="Item Group" />
         </DataGrid.Columns >
       </DataGrid >       <TextBlock FontSize="24" Text="{Binding ErrorMessage}" Foreground="Red" Grid.Column="1" Grid.Row="2"/>
        <TextBlock FontSize="24" Text="{Binding Message}" Foreground="LightBlue" Grid.Column="1" Grid.Row="2"/>

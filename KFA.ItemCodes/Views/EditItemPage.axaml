@@ -14,6 +14,11 @@
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
       <RowDefinition Height="10" />
     </Grid.RowDefinitions>
     <Grid.ColumnDefinitions>
@@ -27,11 +32,11 @@
 	<TextBlock
 		Grid.Row = "2" VerticalAlignment="Top"
 				Name="TxbItemCode" Text="Item Code"
-				Grid.Column = "1"		        
+				Grid.Column = "1"		FontSize="26"        
 				Margin = "5,5,5,5" Classes="data"
 				Focusable="False" />
 
-			<AutoCompleteBox
+			<AutoCompleteBox FontSize="26"     
 				Grid.Row = "2"
 				Grid.Column = "2"
 				Name="TxtItemCode"
@@ -42,12 +47,12 @@
 	  <TextBlock
 		Grid.Row = "3" VerticalAlignment="Top"
 				Name="TxbItemName" Text="Item Name"
-				Grid.Column = "1"
+				Grid.Column = "1" FontSize="26"     
 				Margin = "5,5,5,5" Classes="data"
 				Focusable="False" />
 
 			<AutoCompleteBox
-				Grid.Row = "3"
+				Grid.Row = "3" FontSize="26"     
 				Grid.Column = "2"
 				Name="TxtItemName"
 				Margin = "5,5,5,5" MinWidth="280"
@@ -57,13 +62,13 @@
 	  <TextBlock
 		Grid.Row = "4" VerticalAlignment="Top"
 				Name="TxbItemSupplier" Text="Supplier"
-				Grid.Column = "1"
+				Grid.Column = "1" FontSize="26"     
 				Margin = "5,5,5,5" Classes="data"
 				Focusable="False" />
 
 			<AutoCompleteBox
 				Grid.Row = "4"
-				Grid.Column = "2"
+				Grid.Column = "2" FontSize="26"     
 				Name="TxtItemSupplier"
 				Margin = "5,5,5,5" MinWidth="280"
 				VerticalAlignment = "Top">
@@ -77,8 +82,15 @@
 	  </Grid>
 	   <TextBlock
 		Grid.Row = "6" VerticalAlignment="Top"
-				Name="TxbError"  Grid.ColumnSpan="4"
-				Grid.Column = "1"
+				Name="TxbItemGroup"  Grid.ColumnSpan="4"
+				Grid.Column = "1" FontSize="36"
+				Margin = "5,5,5,5" Classes="data"
+				Focusable="False" />
+    
+     <TextBlock
+		Grid.Row = "7" VerticalAlignment="Top"
+				Name="TxbError" Foreground="Red" Grid.ColumnSpan="4"
+				Grid.Column = "1" FontSize="26"
 				Margin = "5,5,5,5" Classes="data"
 				Focusable="False" />
    </Grid>

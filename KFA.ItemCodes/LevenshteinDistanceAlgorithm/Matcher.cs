@@ -16,7 +16,8 @@ namespace LevenshteinDistanceAlgorithm
                 var code = CheckCodesName(col.Name);
                 col.MeasureUnit = code.unitOfMeasure;
                 col.Name = CheckHarmonizedName(code.name);
-                col.GroupName=code.groupName;
+                if (string.IsNullOrWhiteSpace(col.ItemGroup))
+                    col.GroupName = code.groupName;
                 col.HarmonizedGroupName=code.harmonizedGroupName;
                 col.HarmonizedName=code.harmonizedName;
             });
@@ -34,8 +35,8 @@ namespace LevenshteinDistanceAlgorithm
 				
 				try
                 {
-					name = name?.Replace("x", "X");
-                    if(Regex.IsMatch(name??"", "X *[0-9]+ *[a-zA-Z]+$"))
+					name = name?.Replace(" x", " X");
+                    if(Regex.IsMatch(name??"", " X *[0-9]+ *[a-zA-Z]+$"))
                     {
                        var value = Regex.Match(name ?? "", "X *[0-9]+ *[a-zA-Z]+$").Value;
                        name = name?.Replace(value, value[1..]);
