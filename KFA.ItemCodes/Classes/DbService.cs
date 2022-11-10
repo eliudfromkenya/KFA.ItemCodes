@@ -15,7 +15,46 @@ namespace KFA.ItemCodes.Classes
     internal static class DbService
     {
         // internal static List<LevenshteinDistanceAlgorithm.ItemCode> AllItemCodes; 
-        public static string? user = Environment.MachineName ?? "Eliud";
+        public static string? user = null;
+
+        private static string GetUserName()
+        {
+            var sql = $@"DROP TABLE IF EXISTS deviceNames;
+CREATE TEMPORARY TABLE deviceNames AS 
+SELECT DISTINCT device_name, device_code FROM tbl_data_devices;
+
+-- SELECT (SELECT login_id FROM tbl_user_logins WHERE deviceNames.device_code = tbl_user_logins.device_id ORDER BY tbl_user_logins.from_date DESC LIMIT 1) FROM deviceNames;
+
+DROP TABLE IF EXISTS XUserLogins;
+CREATE TEMPORARY TABLE XUserLogins AS 
+SELECT (SELECT login_id FROM tbl_user_logins WHERE deviceNames.device_code = tbl_user_logins.device_id ORDER BY tbl_user_logins.from_date DESC LIMIT 1) login_id FROM deviceNames;
+
+SELECT
+	tbl_system_users.name_of_the_user
+	-- tbl_system_users.username, 
+	-- tbl_data_devices.device_number, 
+	-- tbl_data_devices.device_name, 
+	-- tbl_data_devices.device_code, 
+	-- tbl_data_devices.device_caption
+FROM
+	tbl_data_devices
+	INNER JOIN
+	tbl_user_logins
+	ON 
+		tbl_data_devices.device_id = tbl_user_logins.device_id
+	INNER JOIN
+	tbl_system_users
+	ON 
+		tbl_user_logins.user_id = tbl_system_users.user_id
+	WHERE tbl_user_logins.login_id In (SELECT login_id FROM XUserLogins)
+	AND device_name  = '{Environment.MachineName}';
+	";
+            var name = GetMySqlScalar(sql)?.ToString();
+            if (string.IsNullOrWhiteSpace(name))
+                name = Environment.MachineName;
+
+            return name;
+        }
         public static async Task SaveItem(string itemCode,string itemName, string supplier, bool isUpdate)
         {
             try
@@ -24,10 +63,13 @@ namespace KFA.ItemCodes.Classes
                     throw new Exception("Invalid item code");
                 if (string.IsNullOrWhiteSpace(itemName))
                     throw new Exception("Item name is required please");
-                if (string.IsNullOrWhiteSpace(user))
-                    throw new Exception("Username is required please");
+                //if (string.IsNullOrWhiteSpace(user))
+                //    throw new Exception("Username is required please");
 
                 var name = Matcher.CheckCodesName(Matcher.CheckHarmonizedName(itemName?.ToUpper()));
+
+                if (user == null)
+                    user = GetUserName();
 
                 string sql;
                 if (!isUpdate)
@@ -54,7 +96,7 @@ namespace KFA.ItemCodes.Classes
                 {
                     try
                     {
-                        sql = $"SELECT ITEM_CODE FROM ITEM_MASTER WHERE ITEM_CODE = '{itemCode}' AND BUY_PRICE > 0";
+                        sql = $"SELECT ITEM_CODE FROM ITEM_MASTER WHERE ITEM_CODE = '{itemCode}' -- AND BUY_PRICE > 0";
                         if (GetDb2Scalar(sql)?.ToString() == itemCode)
                             throw new AccessViolationException("Can not update the record because it currently contains stocks in branch POS(es)");
                     }
@@ -64,7 +106,7 @@ namespace KFA.ItemCodes.Classes
                     }
                     catch (Exception) { }
 
-                    sql = $"UPDATE `tbl_stock_items` SET `item_name`= '{itemName.Replace("'", "''")}',`date_updated`={DateTime.Now:yyyyMMdd}100756977, barcode = '{user?.Replace("'", "''")}', `distributor` = {(string.IsNullOrWhiteSpace(supplier) ? "NULL" : $"'{supplier.Replace("'", "''")}'")} WHERE `item_code` = '{itemCode}'";
+                    sql = $"UPDATE `tbl_stock_items` SET `item_name`= '{itemName?.Replace("'", "''")}',`date_updated`={DateTime.Now:yyyyMMdd}100756977, barcode = '{user?.Replace("'", "''")}', `distributor` = {(string.IsNullOrWhiteSpace(supplier) ? "NULL" : $"'{supplier.Replace("'", "''")}'")} WHERE `item_code` = '{itemCode}'";
                 }
                 else
                     sql = $"INSERT INTO `tbl_stock_items`(barcode, `date_added`, `date_updated`, `originator_id`, `is_currently_enabled`, `item_code`, `distributor`, `group_id`, `item_name`, `is_active`) VALUES ('{user?.Replace("'", "''")}', {DateTime.Now:yyyyMMdd}100756977, {DateTime.Now:yyyyMMdd}100756977, 30000000123, 1, '{itemCode}', {(string.IsNullOrWhiteSpace(supplier) ? "NULL" : $"'{supplier.Replace("'", "''")}'")},'{itemCode[..2]}', '{itemName.Replace("'", "''")}', 1);";

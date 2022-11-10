@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using KFA.ItemCodes.ViewModels;
 using LevenshteinDistanceAlgorithm;
 
 namespace KFA.ItemCodes.Views
@@ -19,6 +20,26 @@ namespace KFA.ItemCodes.Views
             DataContext = this;
             this.FindControl<Button>("BtnSearchBackwards").Click += (xx,yy) => Search_Forward();
             this.FindControl<Button>("BtnSearchForwards").Click += (xx,yy) => Search_Backward();
+            this.FindControl<Button>("BtnAddItem").Click += (xx,yy) => {
+                try
+                {
+                    EditItemPage.ItemName = SearchBasedName;
+
+                    EditItemPage.isUpdate = false;
+                    var page = new EditItemPage
+                    {
+                        WindowState = WindowState.Maximized
+                    };
+
+                    page.Show();
+                    page.WindowState = WindowState.Maximized;
+                    //page.Topmost = true;
+                }
+                catch (Exception ex)
+                {
+                    Functions.NotifyError(ex);
+                }
+            };
             this.FindControl<Button>("BtnClose").Click += (xx,yy) => this.Close();
             var dgItems = this.FindControl<DataGrid>("DgItems");
             dgItems.SelectionChanged += (xx, yy) =>
@@ -68,6 +89,7 @@ namespace KFA.ItemCodes.Views
                     v.itemFrom,
                     v.itemTo,
                     v.count,
+                    Group = MainWindowViewModel.itemGroups.FirstOrDefault(m => m.GroupId == v.itemFrom?[..2]),
                     Text = v.count == 0 ? v.itemFrom : $"{v.itemFrom}-{v.itemTo} ({v.count + 1} spaces)"
                 });
                 EditItemPage.ItemCode = items?.First().itemFrom;
@@ -89,6 +111,7 @@ namespace KFA.ItemCodes.Views
                     v.itemFrom,
                     v.itemTo,
                     v.count,
+                    Group = MainWindowViewModel.itemGroups.FirstOrDefault(m => m.GroupId == v.itemFrom?[..2]),
                     Text = v.count == 0 ? v.itemFrom : $"{v.itemFrom}-{v.itemTo} ({v.count + 1} spaces)"
                 }); 
                 EditItemPage.ItemCode = items?.First().itemFrom;
