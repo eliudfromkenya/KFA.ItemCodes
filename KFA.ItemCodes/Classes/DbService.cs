@@ -63,13 +63,10 @@ FROM
                     throw new Exception("Invalid item code");
                 if (string.IsNullOrWhiteSpace(itemName))
                     throw new Exception("Item name is required please");
-                //if (string.IsNullOrWhiteSpace(user))
-                //    throw new Exception("Username is required please");
 
                 var name = Matcher.CheckCodesName(Matcher.CheckHarmonizedName(itemName?.ToUpper()));
 
-                if (user == null)
-                    user = GetUserName();
+                user ??= GetUserName();
 
                 string sql;
                 if (!isUpdate)
@@ -96,20 +93,20 @@ FROM
                 {
                     try
                     {
-                        sql = $"SELECT ITEM_CODE FROM ITEM_MASTER WHERE ITEM_CODE = '{itemCode}' -- AND BUY_PRICE > 0";
-                        if (GetDb2Scalar(sql)?.ToString() == itemCode)
+                        sql = $"SELECT ITEM_CODE FROM ITEM_MASTER WHERE ITEM_CODE = '{itemCode}' AND BUY_PRICE > 0";
+                       if (GetDb2Scalar(sql)?.ToString() == itemCode)
                             throw new AccessViolationException("Can not update the record because it currently contains stocks in branch POS(es)");
                     }
                     catch (AccessViolationException)
                     {
-                        throw;
+                       // throw;
                     }
                     catch (Exception) { }
 
                     sql = $"UPDATE `tbl_stock_items` SET `item_name`= '{itemName?.Replace("'", "''")}',`date_updated`={DateTime.Now:yyyyMMdd}100756977, barcode = '{user?.Replace("'", "''")}', `distributor` = {(string.IsNullOrWhiteSpace(supplier) ? "NULL" : $"'{supplier.Replace("'", "''")}'")} WHERE `item_code` = '{itemCode}'";
                 }
                 else
-                    sql = $"INSERT INTO `tbl_stock_items`(barcode, `date_added`, `date_updated`, `originator_id`, `is_currently_enabled`, `item_code`, `distributor`, `group_id`, `item_name`, `is_active`) VALUES ('{user?.Replace("'", "''")}', {DateTime.Now:yyyyMMdd}100756977, {DateTime.Now:yyyyMMdd}100756977, 30000000123, 1, '{itemCode}', {(string.IsNullOrWhiteSpace(supplier) ? "NULL" : $"'{supplier.Replace("'", "''")}'")},'{itemCode[..2]}', '{itemName.Replace("'", "''")}', 1);";
+                    sql = $"INSERT INTO `tbl_stock_items`(barcode, `date_added`, `date_updated`, `originator_id`, `is_currently_enabled`, `item_code`, `distributor`, `group_id`, `item_name`, `is_active`) VALUES ('{user?.Replace("'", "''")}', {DateTime.Now:yyyyMMdd}100756977, {DateTime.Now:yyyyMMdd}100756977, 30000000123, 1, '{itemCode}', {(string.IsNullOrWhiteSpace(supplier) ? "NULL" : $"'{supplier.Replace("'", "''")}'")},'{itemCode[..2]}', '{itemName?.Replace("'", "''")}', 1);";
 
                 try
                 {
@@ -120,7 +117,7 @@ FROM
                     sql = $"SELECT item_code FROM tbl_stock_items WHERE LENGTH(TRIM(item_name)) < 1 AND item_code = '{itemCode}';";
                     if (!isUpdate && GetMySqlScalar(sql)?.ToString() == itemCode)
                     {
-                        sql = $"UPDATE `tbl_stock_items` SET `item_name`= '{itemName.Replace("'", "''")}',`date_updated`={DateTime.Now:yyyyMMdd}100756977, barcode = '{user?.Replace("'", "''")} - was empty item name', `distributor` = {(string.IsNullOrWhiteSpace(supplier) ? "NULL" : $"'{supplier.Replace("'", "''")}'")} WHERE `item_code` = '{itemCode}'";
+                        sql = $"UPDATE `tbl_stock_items` SET `item_name`= '{itemName?.Replace("'", "''")}',`date_updated`={DateTime.Now:yyyyMMdd}100756977, barcode = '{user?.Replace("'", "''")} - was empty item name', `distributor` = {(string.IsNullOrWhiteSpace(supplier) ? "NULL" : $"'{supplier.Replace("'", "''")}'")} WHERE `item_code` = '{itemCode}'";
                         ExecuteMySqlNonQuery(sql);
                     }
                     else throw;

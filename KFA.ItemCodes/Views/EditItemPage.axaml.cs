@@ -1,8 +1,6 @@
 using System;
 using System.Windows.Input;
 using Avalonia.Controls;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Windows.Input;
 using ReactiveUI;
 using System.Threading.Tasks;
 using KFA.ItemCodes.Classes;
