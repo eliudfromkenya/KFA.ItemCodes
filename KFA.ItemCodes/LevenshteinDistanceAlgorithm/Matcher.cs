@@ -13,14 +13,58 @@ namespace LevenshteinDistanceAlgorithm
         {
             codes.ForEach(col =>
             {
+                try
+                {
+                    if ((col.Distributor?.Trim()?.Length > 3)
+                        && !col.Name.ToUpper().Contains(col.Distributor))
+                    {
+                        if (!Regex.IsMatch(col.Name, @"\(.*[a-zA-Z].*\)"))
+                        {
+                            col.Name = $"{col.Name} ({col.Distributor})";
+                            col.OriginalName = $"{col.OriginalName} ({col.Distributor})";
+                        }
+                    }
+                    else if (col.Code.StartsWith("08") && !col.Name.ToUpper().Contains("UNGA"))
+                    {
+                        if (!Regex.IsMatch(col.Name, @"\(.*[a-zA-Z].*\)"))
+                        {
+                            col.Name = $"{col.Name} (UNGA)";
+                            col.OriginalName = $"{col.OriginalName} (UNGA)";
+                        }
+                    }
+                    else if (col.Code.StartsWith("15") && !col.Name.ToUpper().Contains("COOPER"))
+                    {
+                        if (!Regex.IsMatch(col.Name, @"\(.*[a-zA-Z].*\)"))
+                        {
+                            col.OriginalName = $"{col.OriginalName} (COOPER)";
+                            col.Name = $"{col.Name} (COOPER)";
+                        }
+                    }
+                    else if (col.Code.StartsWith("17") && !col.Name.ToUpper().Contains("TWIGA"))
+                    {
+                        if (!Regex.IsMatch(col.Name, @"\(.*[a-zA-Z].*\)"))
+                        {
+                            col.OriginalName = $"{col.OriginalName} (TWIGA)";
+                            col.Name = $"{col.Name} (TWIGA)";
+                        }
+                    }
+                }
+                catch { }               
+
                 var (name, unitOfMeasure, groupName, harmonizedName, harmonizedGroupName) = CheckCodesName(col.Name);
+                try
+                {
+                    name = CheckHarmonizedName(name, col.Code);
+                }
+                catch { }
+
                 var match = Regex.Match(name ?? "", @"\(.*[a-zA-Z].*\) *$");
                 if (match.Success && (col?.OriginalName?.Contains(match.Value) ?? false))
                 {
                     col.OriginalName = $"{col.OriginalName} {match.Value}";
                 }
                 col.MeasureUnit = unitOfMeasure;
-                col.Name = CheckHarmonizedName(name);
+               
                 if (string.IsNullOrWhiteSpace(col.ItemGroup))
                     col.GroupName = groupName;
                 col.HarmonizedGroupName=harmonizedGroupName;
@@ -28,7 +72,7 @@ namespace LevenshteinDistanceAlgorithm
             });
         }
 
-        public static (string? name, string? unitOfMeasure, string? groupName, string? harmonizedName, string? harmonizedGroupName) CheckCodesName(string? name, string? distributor = null)
+        public static (string? name, string? unitOfMeasure, string? groupName, string? harmonizedName, string? harmonizedGroupName) CheckCodesName(string? name, string? distributor = null, string? itemCode = "")
         {
            try
                 {
@@ -104,8 +148,13 @@ namespace LevenshteinDistanceAlgorithm
                     name = CheckName(name);
                 }
                 catch (Exception ex) { Functions.Notify("Error 2B " + ex.ToString()); }
+                try
+                {
+                    name = CheckHarmonizedName(name, itemCode);
+                }
+                catch (Exception ex) { Functions.Notify("Error 2B " + ex.ToString()); } 
 
-                string? unitOfMeasure = null, groupName = null, harmonizedName=null, harmonizedGroupName = null;
+            string? unitOfMeasure = null, groupName = null, harmonizedName=null, harmonizedGroupName = null;
                 try
                 {
                     const string pattern = @"([\d]+\.?[\d]* *[a-zA-Z]{1,5} *$)|([\d]* *x *[\d]+ *[a-zA-Z]{1,5} *$)|([\d]* *\* *[\d]+ *[a-zA-Z]{1,5} *$)|([\d]+ *[a-zA-Z]{1,5} *x *[\d]* *$)|([\d]+ *[a-zA-Z]{1,5} *\* *[\d]* *$)";
@@ -248,7 +297,7 @@ namespace LevenshteinDistanceAlgorithm
             if (name.Contains("C/WONDER") && !name.Contains("CALIFORNIA WONDER"))
                 name = name.Replace("C/WONDER", "CALIFORNIA WONDER");
 
-            if (name?.Contains("G")??false  || (itemCode?.StartsWith("42") ?? false))
+           // if (name?.Contains("G")??false  || (itemCode?.StartsWith("42") ?? false))
             {
                 if (name.Contains("C W ") && !name.Contains("CALIFORNIA WONDER "))
                     name = name.Replace("C W ", " CALIFORNIA WONDER ");
@@ -257,7 +306,7 @@ namespace LevenshteinDistanceAlgorithm
                 if (name.Contains("C/W ") && !name.Contains("CALIFORNIA WONDER "))
                     name = name.Replace("C/W ", " CALIFORNIA WONDER ");
             }
-            if (true || (itemCode?.StartsWith("07") ?? false))
+            //if (true || (itemCode?.StartsWith("07") ?? false))
             {
                 if (name.Contains("HYBRID"))
                     name = name.Replace("HYBRID", "H");

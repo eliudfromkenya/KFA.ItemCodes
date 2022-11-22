@@ -11,6 +11,7 @@ using LevenshteinDistanceAlgorithm;
 using System.Collections.Generic;
 using OfficeOpenXml;
 using Avalonia.Media;
+using System.IO;
 
 namespace KFA.ItemCodes.Views
 {
@@ -66,7 +67,41 @@ namespace KFA.ItemCodes.Views
 
         async Task TransferStocks(object obj)
         {
+            try
+            {
+                using var kosgeiFile = new ExcelPackage(new FileInfo(Path.Combine(@"C:\Users\Eliud\Desktop\Excel Working Files", "all Branches.xlsx")));
+                using var sheetKosgei = kosgeiFile.Workbook
+                                        .Worksheets["SELECTED 5 ITEMS"];
 
+                List<(string Code, string Group, bool IsDefault, bool IsKosgei)> kosgeiItems = new();
+                var cells = (from cell in sheetKosgei.Cells["A:A"]
+                             select new
+                             {
+                                 cell.Start.Row,
+                                 ItemCode = cell.Value?.ToString(),
+                                 Name = sheetKosgei.Cells[cell.Start.Row, 3]?.Value?.ToString()?.Trim(),
+                                 Selected = sheetKosgei.Cells[cell.Start.Row, 4]?.Value?.ToString()?.Trim(),
+                                 Group = sheetKosgei.Cells[cell.Start.Row, 5]?.Value?.ToString()?.Trim()
+                             }).ToArray();
+                var sqls = cells
+                    .Where
+                    (v => CustomValidations.IsValidItemCode(v.ItemCode))
+                        .GroupBy(c => c.Group).SelectMany(x =>
+                        {
+                            var code = x.FirstOrDefault(c => c.Selected == "False")?.ItemCode ?? "XXXX";
+                            return x.Select(x => new
+                            {
+                                Update = $@"UPDATE tbl_stock_items SET item_name = '{x.Name.Replace("'", "''")}' WHERE item_code = '{x.ItemCode}';",
+                                IsActive = $@"UPDATE tbl_stock_items SET is_active = {(x.Selected == "False" ? 1 : 0)} WHERE item_code = '{x.ItemCode}';",
+                                MoveStock = $@"UPDATE tbl_stock_count_sheets SET item_code = '{code}' WHERE item_code = '{x.ItemCode}';"
+                            });
+                        }).Select(v => v.IsActive + " \r\n" + v.Update + "\r\n" + v.MoveStock).ToArray();
+                var sql = string.Join("\r\n", sqls);
+            }
+            catch (Exception ex)
+            {
+                ErrorFound(ex);
+            }
         }
 
         async Task Harmonize(object obj)

@@ -228,6 +228,53 @@ public class MsExcelReportService
         sheet.Cells[currentRow, 1, currentRow, 5].Style.Font.UnderLine = true;
         currentRow++;
 
+
+        using var kosgeiFile = new ExcelPackage(new FileInfo(Path.Combine(mainFolder, "Copy of all Branches updated .xlsx")));
+        using var sheetKosgei = kosgeiFile.Workbook
+                                .Worksheets["Duplicated Item Codes"];
+
+        List<(string Code, string Group, bool IsDefault, bool IsKosgei)> kosgeiItems = new();
+        var cells = (from cell in sheetKosgei.Cells["A:A"]
+                     select new
+                     { cell.Start.Row,
+                         ItemCode = cell.Value?.ToString(),
+                         Default = sheetKosgei.Cells[cell.Start.Row,5]?.Value?.ToString()?.Trim(),
+                         KosGei =  sheetKosgei.Cells[cell.Start.Row,6]?.Value?.ToString()?.Trim()
+                     }).ToArray();
+
+        bool isValidItemCode = false;
+        string currentGroup = "";
+        List<string> currentItems = new(), burnedItems = new();
+        int lastRow = 1;
+        for (int i = 0; i < cells.Length; i++)
+        {
+            var isValid = CustomValidations.IsValidItemCode(cells[i].ItemCode ?? "");
+            if(isValid || !( cells[i].Row - 1 != lastRow))
+            {
+                isValidItemCode = false;
+            }
+            else
+            {
+                if (!isValidItemCode)
+                {
+                    currentGroup = cells[i].ItemCode;
+                    isValidItemCode = true;
+                }
+                else
+                {
+                    isValidItemCode = false;
+                }
+            }
+
+            if (isValid)
+            {
+                kosgeiItems.Add((cells[i].ItemCode, currentGroup, cells[i].Default == "No", cells[i].KosGei == "1"));
+            }            
+        }
+
+        string[] avaoids = { "\\", "/", ".","-"};
+        string[] priorityList = { "091731","091290","091210","090203","070104","091208","080054","090692","071012","090411","090696","090038","220609","090431","151574","342575","452001","452005","424027","451005","130313","140309","090940","451002","221523","451003","451009","450002","451011", "091210", "080130","093080","071727", "080062", "020264","071145","","","","","080063","081224","093055","093079","422206"};
+
         var itemGroups = (new[] { "Nyahururu Branch Eliud.xlsx", "Nyahururu Branch seroney.xlsx" })
              .SelectMany(x =>
              {
@@ -261,12 +308,29 @@ public class MsExcelReportService
                  var codes = c.Select(m => m.ItemCode?.Trim()).ToArray();
 
                  var selectedCode = c.First().ItemCode;
-                 if (!string.IsNullOrWhiteSpace(newItemCode))
+                 var kosgeiItem = kosgeiItems.FirstOrDefault(n => c.Any(m => m.ItemCode == n.Code));
+                 if (kosgeiItem.IsKosgei && CustomValidations.IsValidItemCode(kosgeiItem.Code ?? ""))
+                     selectedCode = kosgeiItem.Code;
+                 else if(codes.Intersect(priorityList).Any())
+                 {
+                     var objs = codes.Intersect(priorityList);
+                     selectedCode = objs.First();
+                 }
+                 else if (!string.IsNullOrWhiteSpace(newItemCode))
                      selectedCode = c.First(v => v.NewItemCode == newItemCode).ItemCode;
                  else if (c.Any(n => n.IsSelectedByOne))
                      selectedCode = c.First(n => n.IsSelectedByOne).ItemCode;
                  else if (c.Any(n => n.IsSelectedByDefault))
-                     selectedCode = c.First(n => n.IsSelectedByDefault).ItemCode;
+                 {
+                     var items = c.Where(m => !avaoids.Any(o => m.ItemName.Contains(o)) && CustomValidations.IsValidItemCode(m.ItemCode));
+                     if(!items.Any())
+                        items = c.Where(m => CustomValidations.IsValidItemCode(m.ItemCode));
+
+                     if (items.Any(n => n.IsSelectedByDefault))
+                         items = items.Where(n => n.IsSelectedByDefault);
+                   
+                     selectedCode = (items.FirstOrDefault(n => n.IsSelectedByDefault) ?? c.FirstOrDefault()) ?.ItemCode;
+                 }
 
                  string unit = "KG", value = c.First().Unit ?? "";
                   const string unitMeasurePattern = @"^ *[\d]+\.?[\d]* *[a-zA-Z]{1,5} *$";
@@ -300,185 +364,191 @@ public class MsExcelReportService
                 catch { }
             });
 
-        using var masterSheet = excelPackage.Workbook.Worksheets[0];
-        var itemRows = masterSheet.Cells["A:A"]
-            .Select(x => new
-            {
-                Value = x.Value?.ToString()?.Trim(),
-                x.Start.Row
-            }).Where(m => m.Value != null &&
-               CustomValidations.IsValidItemCode(m.Value)).ToArray();
+        ////using var masterSheet = excelPackage.Workbook.Worksheets[0];
+        ////var itemRows = masterSheet.Cells["A:A"]
+        ////    .Select(x => new
+        ////    {
+        ////        Value = x.Value?.ToString()?.Trim(),
+        ////        x.Start.Row
+        ////    }).Where(m => m.Value != null &&
+        ////       CustomValidations.IsValidItemCode(m.Value)).ToArray();
 
-        var itemInvalidRows = masterSheet.Cells["A:A"]
-           .Select(x => new
-           {
-               Value = x.Value?.ToString()?.Trim(),
-               x.Start.Row
-           }).Where(m => m.Value != null &&
-              !CustomValidations.IsValidItemCode(m.Value)).ToArray();
+        ////var itemInvalidRows = masterSheet.Cells["A:A"]
+        ////   .Select(x => new
+        ////   {
+        ////       Value = x.Value?.ToString()?.Trim(),
+        ////       x.Start.Row
+        ////   }).Where(m => m.Value != null &&
+        ////      !CustomValidations.IsValidItemCode(m.Value)).ToArray();
 
-        foreach (var itemRow in itemRows)
-        {
-            try
-            {
-                var itm = items.FirstOrDefault(c => itemRow.Value?.ToString()?.Trim() == c.Code);
-                if (itm != null)
-                {
-                    masterSheet.Cells[$"A{itemRow.Row}"].Value = itemRow.Value?.ToString()?.Trim();
-                    masterSheet.Cells[$"C{itemRow.Row}"].Value = itm.Name;
-                }
-            }
-            catch { }
-        }
+        ////foreach (var itemRow in itemRows)
+        ////{
+        ////    try
+        ////    {
+        ////        var itm = items.FirstOrDefault(c => itemRow.Value?.ToString()?.Trim() == c.Code);
+        ////        if (itm != null)
+        ////        {
+        ////            masterSheet.Cells[$"A{itemRow.Row}"].Value = itemRow.Value?.ToString()?.Trim();
+        ////            masterSheet.Cells[$"C{itemRow.Row}"].Value = itm.Name;
+        ////        }
+        ////    }
+        ////    catch { }
+        ////}
 
-        var maxRow = masterSheet.Dimension.Rows;
-        foreach (var itemRow in itemInvalidRows)
-        {
-            try
-            {
-                if(itemRow.Row > 3)
-                {
-                    range = masterSheet.Cells[itemRow.Row, 1, itemRow.Row, 150];
-                    range.Style.Font.Color.SetColor(Color.DarkRed);
-                    range.Style.Fill.SetBackground(Color.HotPink);
-                    range.Style.Font.Bold = true;
+        ////var maxRow = masterSheet.Dimension.Rows;
+        ////foreach (var itemRow in itemInvalidRows)
+        ////{
+        ////    try
+        ////    {
+        ////        if(itemRow.Row > 3)
+        ////        {
+        ////            range = masterSheet.Cells[itemRow.Row, 1, itemRow.Row, 150];
+        ////            range.Style.Font.Color.SetColor(Color.DarkRed);
+        ////            range.Style.Fill.SetBackground(Color.HotPink);
+        ////            range.Style.Font.Bold = true;
 
-                    range = masterSheet.Cells[itemRow.Row, 1, itemRow.Row, 1];
-                    range.Style.Font.Color.SetColor(Color.RebeccaPurple);
-                    range.Style.Font.UnderLine = true;
-                    range.Style.Font.Size = 14;
+        ////            range = masterSheet.Cells[itemRow.Row, 1, itemRow.Row, 1];
+        ////            range.Style.Font.Color.SetColor(Color.RebeccaPurple);
+        ////            range.Style.Font.UnderLine = true;
+        ////            range.Style.Font.Size = 14;
 
-                    masterSheet.Cells[$"CI{itemRow.Row}"].Value = "DELXX";
-                }
-            }
-            catch { }
-        }
+        ////            masterSheet.Cells[$"CI{itemRow.Row}"].Value = "DELXX";
+        ////        }
+        ////    }
+        ////    catch { }
+        ////}
 
-        foreach (var item in items.OrderBy(m => m.Code))
-        {
-            try
-            {
-                var itm = itemRows.FirstOrDefault(c => c.Value == item.Code);
-                if (itm != null)
-                    continue;
+        ////foreach (var item in items.OrderBy(m => m.Code))
+        ////{
+        ////    try
+        ////    {
+        ////        var itm = itemRows.FirstOrDefault(c => c.Value == item.Code);
+        ////        if (itm != null)
+        ////            continue;
 
-                if (!CustomValidations.IsValidItemCode(item.Code??""))
-                    continue;
+        ////        if (!CustomValidations.IsValidItemCode(item.Code??""))
+        ////            continue;
 
-                var closeItemRow = itemRows.First();
-                for (int i = 6 - 1; i >= 1; i--)
-                {
-                    try
-                    {
-                        var rows = itemRows.Where(m => m.Value[..i] == item.Code?[..i]).ToArray();
-                        if (rows.Any())
-                        {
-                            closeItemRow = rows.First();
-                            break;
-                        }
-                    }
-                    catch { }
-                }
-                if (itm == null)
-                {
-                    maxRow++;
-                    masterSheet.Cells[closeItemRow.Row, 1, closeItemRow.Row, 150]
-                        .Copy(masterSheet.Cells[maxRow, 1, maxRow, 150]);
-                    masterSheet.Cells[$"A{maxRow}"].Value = item.Code;
-                    masterSheet.Cells[$"C{maxRow}"].Value = item.Name;
-                    masterSheet.Cells[$"M{maxRow}"].Value = "";//supplier
-                    masterSheet.Cells[$"CF{maxRow}"].Value = "";//selected item code
-                    masterSheet.Cells[$"AS{maxRow}"].Value = "KG";
-                    masterSheet.Cells[$"CI{maxRow}"].Value = "ADDX";
-                    range = masterSheet.Cells[maxRow, 1, maxRow, 150];
-                    range.Style.Font.Color.SetColor(Color.RebeccaPurple);
-                    range.Style.Fill.SetBackground(Color.LightGreen);
-                }
-            }
-            catch { }
-        }
+        ////        var closeItemRow = itemRows.First();
+        ////        for (int i = 6 - 1; i >= 1; i--)
+        ////        {
+        ////            try
+        ////            {
+        ////                var rows = itemRows.Where(m => m.Value[..i] == item.Code?[..i]).ToArray();
+        ////                if (rows.Any())
+        ////                {
+        ////                    closeItemRow = rows.First();
+        ////                    break;
+        ////                }
+        ////            }
+        ////            catch { }
+        ////        }
+        ////        if (itm == null)
+        ////        {
+        ////            maxRow++;
+        ////            masterSheet.Cells[closeItemRow.Row, 1, closeItemRow.Row, 150]
+        ////                .Copy(masterSheet.Cells[maxRow, 1, maxRow, 150]);
+        ////            masterSheet.Cells[$"A{maxRow}"].Value = item.Code;
+        ////            masterSheet.Cells[$"C{maxRow}"].Value = item.Name;
+        ////            masterSheet.Cells[$"M{maxRow}"].Value = "";//supplier
+        ////            masterSheet.Cells[$"CF{maxRow}"].Value = "";//selected item code
+        ////            masterSheet.Cells[$"AS{maxRow}"].Value = "KG";
+        ////            masterSheet.Cells[$"CI{maxRow}"].Value = "ADDX";
+        ////            range = masterSheet.Cells[maxRow, 1, maxRow, 150];
+        ////            range.Style.Font.Color.SetColor(Color.RebeccaPurple);
+        ////            range.Style.Fill.SetBackground(Color.LightGreen);
+        ////        }
+        ////    }
+        ////    catch { }
+        ////}
 
-        itemRows = masterSheet.Cells["A:A"]
-            .Select(x => new
-            {
-                Value = x.Value?.ToString()?.Trim(),
-                x.Start.Row
-            }).Where(m => m.Value != null &&
-               CustomValidations.IsValidItemCode(m.Value)).ToArray();
+        ////itemRows = masterSheet.Cells["A:A"]
+        ////    .Select(x => new
+        ////    {
+        ////        Value = x.Value?.ToString()?.Trim(),
+        ////        x.Start.Row
+        ////    }).Where(m => m.Value != null &&
+        ////       CustomValidations.IsValidItemCode(m.Value)).ToArray();
 
-        items.GroupBy(c => c.HarmonizedName.Replace("X","")).ToList().ForEach(x =>
-        {
-            var itm = itemGroups.FirstOrDefault(c => x.Any(op => op.Name == c.Name));
+        ////items.GroupBy(c => c.HarmonizedName.Replace("X","")).ToList().ForEach(x =>
+        ////{
+        ////    var itm = itemGroups.FirstOrDefault(c => x.Any(op => op.Name == c.Name));
 
-            foreach (var item in x)
-            {
-                var currentCodes = x.Select(c => c.Code).ToArray();
-                var itemRow = itemRows.FirstOrDefault(x => x.Value == item.Code);
+        ////    foreach (var item in x)
+        ////    {
+        ////        var currentCodes = x.Select(c => c.Code).ToArray();
+        ////        var itemRow = itemRows.FirstOrDefault(x => x.Value == item.Code);
 
-                if (itemRow != null)
-                {
-                    if (x.Count() == 1)
-                    {
-                        try
-                        {
-                            masterSheet.Cells[$"CF{itemRow.Row}"].Value = "1";
-                        }
-                        catch { }
-                    }
-                    var selectedCode = itm?.SelectedItemCode;
+        ////        if (itemRow != null)
+        ////        {
+        ////            if (x.Count() == 1)
+        ////            {
+        ////                try
+        ////                {
+        ////                    masterSheet.Cells[$"CF{itemRow.Row}"].Value = "1";
+        ////                }
+        ////                catch { }
+        ////            }
+        ////            var selectedCode = itm?.SelectedItemCode;
 
-                    //masterSheet.Cells[$"A{itemRow.Row}"].Value = item.Code;
-                    masterSheet.Cells[$"C{itemRow.Row}"].Value = item.Name;
-                    masterSheet.Cells[$"CF{itemRow.Row}"].Value = selectedCode;
-                    masterSheet.Cells[$"AS{itemRow.Row}"].Value = itm?.UnitOfMeasure ?? "KG";
+        ////            //masterSheet.Cells[$"A{itemRow.Row}"].Value = item.Code;
+        ////            masterSheet.Cells[$"C{itemRow.Row}"].Value = item.Name;
+        ////            masterSheet.Cells[$"CF{itemRow.Row}"].Value = selectedCode;
+        ////            masterSheet.Cells[$"AS{itemRow.Row}"].Value = itm?.UnitOfMeasure ?? "KG";
 
-                    if (!string.IsNullOrWhiteSpace(selectedCode) && x.Any(m => m.Code == selectedCode))
-                    {
-                        if (selectedCode == item.Code)
-                        {
-                            masterSheet.Cells[$"CF{itemRow.Row}"].Value = "1";
-                            if (masterSheet.Cells[$"CI{itemRow.Row}"].Value.ToString() == "DEL")
-                                masterSheet.Cells[$"CI{itemRow.Row}"].Value = "UPDX";
+        ////            if (!string.IsNullOrWhiteSpace(selectedCode) && x.Any(m => m.Code == selectedCode))
+        ////            {
+        ////                if (selectedCode == item.Code)
+        ////                {
+        ////                    masterSheet.Cells[$"CF{itemRow.Row}"].Value = "1";
+        ////                    if (masterSheet.Cells[$"CI{itemRow.Row}"].Value.ToString() == "DEL")
+        ////                        masterSheet.Cells[$"CI{itemRow.Row}"].Value = "UPDX";
 
-                            if (itm?.NewItemCode?.Trim()?.Length > 4)
-                            {
-                                var code = itm?.NewItemCode?.Trim();
-                                if (int.TryParse(code, out int mm))
-                                    code = mm.ToString("000000");
-                                if (!itemRows.Any(v => v.Value == code))
-                                {
-                                    masterSheet.Cells[$"CF{itemRow.Row}"].Value = $"ShortChanged: ({masterSheet.Cells[$"A{itemRow.Row}"].Value})";
-                                    masterSheet.Cells[$"A{itemRow.Row}"].Value = code;
-                                    range = masterSheet.Cells[itemRow.Row, 1, itemRow.Row, 150];
-                                    range.Style.Font.Color.SetColor(Color.DarkBlue);
-                                    range.Style.Fill.SetBackground(Color.GreenYellow);
-                                    range = masterSheet.Cells[itemRow.Row, 1, itemRow.Row, 1];
-                                    range.Style.Font.UnderLine = true;
-                                    range.Style.Font.Size = 14;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            if (masterSheet.Cells[$"CI{itemRow.Row}"].Value.ToString() != "DEL")
-                                masterSheet.Cells[$"CI{itemRow.Row}"].Value = "DELX";
-                            range = masterSheet.Cells[itemRow.Row, 1, itemRow.Row, 150];
-                            range.Style.Font.Color.SetColor(Color.DarkRed);
-                            range.Style.Fill.SetBackground(Color.LightSlateGray);
-                        }
-                    }
-                }
-            }
-            //individual added units of measures
-            //Code macthing as by branch
-        });
+        ////                    if (itm?.NewItemCode?.Trim()?.Length > 4)
+        ////                    {
+        ////                        var code = itm?.NewItemCode?.Trim();
+        ////                        if (int.TryParse(code, out int mm))
+        ////                            code = mm.ToString("000000");
+        ////                        if (!itemRows.Any(v => v.Value == code))
+        ////                        {
+        ////                            masterSheet.Cells[$"CF{itemRow.Row}"].Value = $"ShortChanged: ({masterSheet.Cells[$"A{itemRow.Row}"].Value})";
+        ////                            masterSheet.Cells[$"A{itemRow.Row}"].Value = code;
+        ////                            range = masterSheet.Cells[itemRow.Row, 1, itemRow.Row, 150];
+        ////                            range.Style.Font.Color.SetColor(Color.DarkBlue);
+        ////                            range.Style.Fill.SetBackground(Color.GreenYellow);
+        ////                            range = masterSheet.Cells[itemRow.Row, 1, itemRow.Row, 1];
+        ////                            range.Style.Font.UnderLine = true;
+        ////                            range.Style.Font.Size = 14;
+        ////                        }
+        ////                    }
+        ////                }
+        ////                else
+        ////                {
+        ////                    if (masterSheet.Cells[$"CI{itemRow.Row}"].Value.ToString() != "DEL")
+        ////                        masterSheet.Cells[$"CI{itemRow.Row}"].Value = "DELX";
+        ////                    range = masterSheet.Cells[itemRow.Row, 1, itemRow.Row, 150];
+        ////                    range.Style.Font.Color.SetColor(Color.DarkRed);
+        ////                    range.Style.Fill.SetBackground(Color.LightSlateGray);
+        ////                }
+        ////            }
+        ////        }
+        ////    }
+        ////    //individual added units of measures
+        ////    //Code macthing as by branch
+        ////});
+        ///
 
+        using var sheet3 = excelPackage.Workbook.Worksheets.Add("SELECTED ITEMS");
+        using var sheet4 = excelPackage.Workbook.Worksheets.Add("SELECTED 5 ITEMS");
+        int grps = 1;
+        int rowSelected = 2;
         items
             .GroupBy(v => v.HarmonizedName)
             .Where(x => x.Count() > 1)
             .OrderByDescending(c => c?.Count())
             .ToList().ForEach(grp =>
             {
+                grps++;
                 List<string> doneCols = new();
                 var itm = itemGroups.FirstOrDefault(c => grp.Any(op => op.Name == c.Name));
                 var isFound = grp.Any(m => m.Code == itm?.SelectedItemCode);
@@ -500,11 +570,24 @@ public class MsExcelReportService
                     sheet.Cells[currentRow, 4].Value = col?.MeasureUnit;
                     sheet.Cells[currentRow, 5].Value = isDuplicate ? "Yes" : "No";
 
+
                     if (isDuplicate)
                     {
                         range = sheet.Cells[currentRow, 1, currentRow, 5];
                         range.Style.Font.Color.SetColor(Color.DarkRed);
                     }
+                    else
+                    {
+                        sheet3.Cells[rowSelected, 1].Value = col?.Code;
+                        sheet3.Cells[rowSelected++, 2].Value = col?.Name;
+                    }
+
+                    sheet4.Cells[currentRow, 1].Value = col?.Code;
+                    sheet4.Cells[currentRow, 2].Value =  grp.FirstOrDefault(m => m.Code == itm?.SelectedItemCode)?.Code;
+                    sheet4.Cells[currentRow, 3].Value = col?.Name;
+                    sheet4.Cells[currentRow, 4].Value = isDuplicate;
+                    sheet4.Cells[currentRow, 5].Value = grps;
+
                     currentRow++;
                 }
                 currentRow += 1;
