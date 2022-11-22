@@ -64,7 +64,7 @@
       <RadioButton Opacity=".7" Name="rbAdvancedSearch" Content="Advanced Search" Margin="20,3" />
         
        <Button Grid.Column="1" x:Name="RefreshButton" Command="{Binding RefreshDataCommand}"  Margin="10" MinWidth="70" Content="Refresh Data" HorizontalAlignment="Right" />  
-      <Button Grid.Column="1" x:Name="SyncButton" Command="{Binding AddItemfCommand}" Margin="10" MinWidth="70" Content="Synchronize Data" HorizontalAlignment="Right" />
+      <Button Grid.Column="1" x:Name="MoreButton" Command="{Binding MoreCommand}" Margin="10" MinWidth="70" Content="More..." HorizontalAlignment="Right" />
 		  <Button Grid.Column="1" x:Name="AddItemButton" Command="{Binding AddItemCommand}"  Margin="10" MinWidth="70" Content="Add Item" HorizontalAlignment="Right" />
 		  <Button Grid.Column="2" Margin="10" MinWidth="70" Command="{Binding UpdateItemCommand}" Content="Update Item" HorizontalAlignment="Center" x:Name="UpdateItemButton" />
         

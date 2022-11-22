@@ -406,7 +406,7 @@ public class MsExcelReportService
             }).Where(m => m.Value != null &&
                CustomValidations.IsValidItemCode(m.Value)).ToArray();
 
-        items.GroupBy(c => c.HarmonizedName).ToList().ForEach(x =>
+        items.GroupBy(c => c.HarmonizedName.Replace("X","")).ToList().ForEach(x =>
         {
             var itm = itemGroups.FirstOrDefault(c => x.Any(op => op.Name == c.Name));
 

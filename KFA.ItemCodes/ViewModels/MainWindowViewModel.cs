@@ -3,6 +3,7 @@ using KFA.ItemCodes.Classes;
 using KFA.ItemCodes.LevenshteinDistanceAlgorithm;
 using KFA.ItemCodes.Views;
 using LevenshteinDistanceAlgorithm;
+using OfficeOpenXml;
 using ReactiveUI;
 using System;
 using System.Collections.ObjectModel;
@@ -28,6 +29,7 @@ namespace KFA.ItemCodes.ViewModels
         public ICommand RefreshDataCommand { get; }
         public ICommand AddItemCommand { get; }
         public ICommand UpdateItemCommand { get; }
+        public ICommand MoreCommand { get; }
         public ICommand SearchItemCodeCommand { get; }
         public static BehaviorSubject<(string? title, string? message, Exception? ex)> ErrorNotifications { get; set; } = new((null, null, null));
 
@@ -39,7 +41,9 @@ namespace KFA.ItemCodes.ViewModels
 
         public MainWindowViewModel()
         {
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
             RefreshDataCommand = ReactiveCommand.CreateFromTask(async() => RefreshData());
+            MoreCommand = ReactiveCommand.CreateFromTask(async tt => await MoreCommands(tt));
             AddItemCommand = ReactiveCommand.CreateFromTask(AddItem);
             UpdateItemCommand = ReactiveCommand.CreateFromTask(UpdateItemCode);
             SearchItemCodeCommand = ReactiveCommand.CreateFromTask(SearchItemCode);
@@ -48,6 +52,19 @@ namespace KFA.ItemCodes.ViewModels
             ErrorNotifications.Subscribe(OnErrorMessageRecieved);
         }
 
+        async Task MoreCommands(object obj)
+        {
+            await Task.Run(() => Functions.RunOnMain(() =>
+             {
+                 var page = new MoreCommandsPage
+                 {
+                      WindowState = WindowState.FullScreen
+                 };
+                 page.Show();
+                 page.WindowState = WindowState.FullScreen;
+                 //page.Topmost = true;
+             }));
+        }
         private void OnErrorMessageRecieved((string title, string message, Exception ex) tt)
         {
             Functions.RunOnMain(() =>

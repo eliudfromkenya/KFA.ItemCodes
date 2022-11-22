@@ -13,13 +13,18 @@ namespace LevenshteinDistanceAlgorithm
         {
             codes.ForEach(col =>
             {
-                var code = CheckCodesName(col.Name);
-                col.MeasureUnit = code.unitOfMeasure;
-                col.Name = CheckHarmonizedName(code.name);
+                var (name, unitOfMeasure, groupName, harmonizedName, harmonizedGroupName) = CheckCodesName(col.Name);
+                var match = Regex.Match(name ?? "", @"\(.*[a-zA-Z].*\) *$");
+                if (match.Success && (col?.OriginalName?.Contains(match.Value) ?? false))
+                {
+                    col.OriginalName = $"{col.OriginalName} {match.Value}";
+                }
+                col.MeasureUnit = unitOfMeasure;
+                col.Name = CheckHarmonizedName(name);
                 if (string.IsNullOrWhiteSpace(col.ItemGroup))
-                    col.GroupName = code.groupName;
-                col.HarmonizedGroupName=code.harmonizedGroupName;
-                col.HarmonizedName=code.harmonizedName;
+                    col.GroupName = groupName;
+                col.HarmonizedGroupName=harmonizedGroupName;
+                col.HarmonizedName=harmonizedName;
             });
         }
 
@@ -27,18 +32,22 @@ namespace LevenshteinDistanceAlgorithm
         {
            try
                 {
-                    if (!string.IsNullOrWhiteSpace(distributor)
-                    && !int.TryParse(distributor ?? "", out int _))
-                        name = $"{distributor} {name}";
+                if (!string.IsNullOrWhiteSpace(distributor)
+                && !int.TryParse(distributor ?? "", out int _))
+                    if ((name??"").Split(' ').Any(c => (distributor??"").Split(' ').Any(k => k.Contains(c) || c.Contains(k))))
+                    {
+                        name = $"{name} ({distributor})";
+
+                    }
                 }
                 catch (Exception ex) { Functions.Notify("Error 1 " + ex.ToString()); }
 				
 				try
                 {
 					name = name?.Replace(" x", " X");
-                    if(Regex.IsMatch(name??"", " X *[0-9]+ *[a-zA-Z]+$"))
+                    if(Regex.IsMatch(name??"", " X *[0-9]+ *[a-zA-Z]+ *$"))
                     {
-                       var value = Regex.Match(name ?? "", "X *[0-9]+ *[a-zA-Z]+$").Value;
+                       var value = Regex.Match(name ?? "", "X *[0-9]+ *[a-zA-Z]+ *$").Value;
                        name = name?.Replace(value, value[1..]);
                     }
                 }
@@ -220,8 +229,12 @@ namespace LevenshteinDistanceAlgorithm
             if (name.Contains("SPINACH F GIANT") && !name.Contains("SPINACH FORD HOOK GIANT"))
                 name = name.Replace("SPINACH F/HOOK", "SPINACH FORD HOOK GIANT");
 
+            if (name.Contains("ROCK SALT") && !name.Contains("MAGADI SODA"))
+                name = name.Replace("ROCK SALT", "MAGADI SODA");
+
             if (name.Contains("CALIFORNIA W ") && !name.Contains("CALIFORNIA WONDER "))
                 name = name.Replace("CALIFORNIA W ", "CALIFORNIA WONDER ");
+
             if (name.Contains("CALIFONIA") && !name.Contains("CALIFORNIA"))
                 name = name.Replace("CALIFONIA", "CALIFORNIA");
             if (name.Contains("WONDERG") && !name.Contains("WONDER G"))
