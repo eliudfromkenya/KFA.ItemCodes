@@ -97,6 +97,8 @@ namespace KFA.ItemCodes.Views
                             });
                         }).Select(v => v.IsActive + " \r\n" + v.Update + "\r\n" + v.MoveStock).ToArray();
                 var sql = string.Join("\r\n", sqls);
+				
+				File.WriteAllText(Path.Combine(@"C:\Users\Eliud\Desktop\Excel Working Files","sql.sql"), sql);
             }
             catch (Exception ex)
             {
