@@ -61,6 +61,7 @@
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="0.10.18" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.18" />
+    <PackageReference Include="FuzzySharp" Version="2.0.2" />
     <PackageReference Include="XamlNameReferenceGenerator" Version="1.3.4" />
 	  <PackageReference Include="Citrus.Avalonia" Version="1.6.1" />
 	  <PackageReference Include="EPPlus" Version="6.1.0" />
@@ -76,6 +77,15 @@
    
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="Views\EditSupplierPage.axaml.cs">
+      <DependentUpon>EditSupplierPage.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\SearchSuppliersPage.axaml.cs">
+      <DependentUpon>SearchSuppliersPage.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\SuppliersMainWindow.axaml.cs">
+      <DependentUpon>SuppliersMainWindow.axaml</DependentUpon>
+    </Compile>
     <Compile Update="Views\MoreCommandsPage.axaml.cs">
       <DependentUpon>MoreCommandsPage.axaml</DependentUpon>
     </Compile>

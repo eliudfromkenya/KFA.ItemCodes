@@ -13,6 +13,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -37,6 +38,10 @@ namespace KFA.ItemCodes
 
             return factory.CreateDataAdapter();
         }
+
+        public static string? HarmonizeName(this string? name) => $@"{string.Join(" ", Regex.Matches(name ?? "", "[0-9a-zA-Z]+")
+                  .Select(v => v.Value?.ToUpper()?.Trim())
+                  .Distinct().OrderBy(c => c))}".Replace(" ", "");
 
         public static DataSet GetDbDataSet(IDbConnection con, string sql)
         {

@@ -1,4 +1,5 @@
 ﻿// using MoreLinq;
+using FuzzySharp;
 using KFA.ItemCodes;
 using System;
 using System.Collections.Generic;
@@ -419,7 +420,8 @@ namespace LevenshteinDistanceAlgorithm
 
         public static short LaveteshinDistanceAlgorithm(ItemCode code, ItemCode code2)
         {
-            short level = LaveteshinDistanceAlgorithmBody(code.HarmonizedName ?? "", code2.HarmonizedName ?? "");
+            var level = (short)(Fuzz.PartialRatio(code.HarmonizedName ?? "", code2.HarmonizedName ?? ""));
+            //short level = LaveteshinDistanceAlgorithmBody(code.HarmonizedName ?? "", code2.HarmonizedName ?? "");
             if (string.IsNullOrWhiteSpace(code.MeasureUnit)
                 || string.IsNullOrWhiteSpace(code.MeasureUnit))
                 level += 2;
@@ -476,16 +478,27 @@ namespace LevenshteinDistanceAlgorithm
             if (obj != null)
                 return new() { (obj, 0) };
 
+            //return allItemsCodes
+            //    .Select(m =>
+            //    {
+            //        var mn = LaveteshinDistanceAlgorithm(m, tt);
+            //        if (m.MeasureUnit != tt.MeasureUnit)
+            //            mn += 3;
+            //        return new { Obj = m, Measure = mn };
+            //    }).OrderBy(v => v.Measure)
+            //    .Take(matchCount)
+            //    .Select(m => (m.Obj, m.Measure)).ToList();
+
             return allItemsCodes
-                .Select(m =>
-                {
-                    var mn = LaveteshinDistanceAlgorithm(m, tt);
-                    if (m.MeasureUnit != tt.MeasureUnit)
-                        mn += 3;
-                    return new { Obj = m, Measure = mn };
-                }).OrderBy(v => v.Measure)
-                .Take(matchCount)
-                .Select(m => (m.Obj, m.Measure)).ToList();
+              .Select(m =>
+              {
+                  var mn =  LaveteshinDistanceAlgorithm(m, tt);
+                  if (m.MeasureUnit != tt.MeasureUnit)
+                      mn += 3;
+                  return new { Obj = m, Measure = mn };
+              }).OrderBy(v => v.Measure)
+              .Take(matchCount)
+              .Select(m => (m.Obj, m.Measure)).ToList();
         }
     }
 }

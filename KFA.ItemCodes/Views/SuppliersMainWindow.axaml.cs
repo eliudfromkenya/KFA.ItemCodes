@@ -12,15 +12,15 @@ using System.Reactive.Linq;
 
 namespace KFA.ItemCodes.Views
 {
-    public partial class MainWindow : ReactiveWindow<MainWindowViewModel>
+    public partial class SupplierMainWindow : ReactiveWindow<MainSupplierWindowViewModel>
     {
-        private static MainWindow? page;
-        public static MainWindow Page { get => page ?? new MainWindow(); }
-        public MainWindow()
+        private static SupplierMainWindow? page;
+        public static SupplierMainWindow Page { get => page ?? new SupplierMainWindow(); }
+        public SupplierMainWindow()
         {
             InitializeComponent();
-            DataContext = new MainWindowViewModel() { };
-            MainWindowViewModel.MainWindow = this;
+            DataContext = new MainSupplierWindowViewModel() { };
+            MainSupplierWindowViewModel.MainWindow = this;
             this.FontSize = 18;
             this.WhenActivated(IsActivated);
 
@@ -29,18 +29,18 @@ namespace KFA.ItemCodes.Views
         private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
         private void IsActivated(CompositeDisposable disposable)
         {
-             this.FindControl<Button>("CloseButton")
-                .Events().Click.Subscribe(cc =>
-                {
-                    this.Close();
-                }).DisposeWith(disposable);
+            this.FindControl<Button>("CloseButton")
+               .Events().Click.Subscribe(cc =>
+               {
+                   this.Close();
+               }).DisposeWith(disposable);
 
             var searchCtrl = this.FindControl<AutoCompleteBox>("TxtSearch");
             var rbNormalSearch = this.FindControl<RadioButton>("rbNormalSearch");
             var rbAdvSearch = this.FindControl<RadioButton>("rbAdvancedSearch");
             var dgItems = this.FindControl<DataGrid>("DgItems");
 
-            void ReloadDataGrid(bool? advancedSearch= null)
+            void ReloadDataGrid(bool? advancedSearch = null)
             {
                 try
                 {
@@ -67,7 +67,7 @@ namespace KFA.ItemCodes.Views
             {
                 try
                 {
-                    if (DataContext is MainWindowViewModel vm)
+                    if (DataContext is MainSupplierWindowViewModel vm)
                         vm.RefreshData();
                     ReloadDataGrid();
                 }

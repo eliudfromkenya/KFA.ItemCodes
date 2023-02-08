@@ -4,15 +4,15 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" FontSize="18"
-        x:Class="KFA.ItemCodes.Views.MainWindow" SystemDecorations="BorderOnly"
+        x:Class="KFA.ItemCodes.Views.SupplierMainWindow" SystemDecorations="BorderOnly"
         Icon="/Assets/avalonia-logo.ico" WindowState="Maximized"
-        Title="KFA ItemCodes">
+        Title="KFA SupplierCodes">
 
   <Design.DataContext>
-    <vm:MainWindowViewModel />
+    <vm:MainSupplierWindowViewModel />
   </Design.DataContext>
 
-  <Grid>
+    <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="10" />
       <RowDefinition />
@@ -46,16 +46,16 @@
         <AutoCompleteBox Grid.Column="2"  MinWidth="150" Margin="0" Name="TxtSearch" BorderBrush="LightBlue" VerticalAlignment="Center" BorderThickness="1" />
         <Button Name="BtnRefresh" Grid.Column="3" Margin="10" VerticalAlignment="Center" MinWidth="70" IsDefault="True" Content="Go" HorizontalAlignment="Right" />
       </Grid>
-      <DataGrid HorizontalAlignment="Stretch" Name="DgItems"  Grid.Row="1" BorderThickness="1" RowHeight="{Binding ListRowHeight}" Width="1000" Items="{Binding Models}" FontSize="24" Background="Transparent" SelectedItem="{Binding SelectedItem}"
+      <DataGrid HorizontalAlignment="Stretch" Name="DgSuppliers"  Grid.Row="1" BorderThickness="1" RowHeight="{Binding ListRowHeight}" Width="1000" Items="{Binding Models}" FontSize="24" Background="Transparent" SelectedItem="{Binding SelectedSupplier}"
            SelectionMode="Extended" HorizontalScrollBarVisibility="Auto" VerticalAlignment="Stretch"
            MinHeight ="100">
         <DataGrid.Columns>
           <DataGridCheckBoxColumn
             Header="✔" Binding="{Binding RecordIsSelected}" />
-          <DataGridTextColumn Binding="{Binding Code}" MinWidth="100" Header="Item Code" />
-          <DataGridTextColumn Binding="{Binding OriginalName}" MinWidth="300" Header="Item Name" />
+          <DataGridTextColumn Binding="{Binding Code}" MinWidth="100" Header="Supplier Code" />
+          <DataGridTextColumn Binding="{Binding OriginalName}" MinWidth="300" Header="Supplier Name" />
           <DataGridTextColumn Binding="{Binding Distributor}" MinWidth="45" Header="Distributor" />
-          <DataGridTextColumn Binding="{Binding ItemGroup}" MinWidth="100" Header="Item Group" />
+          <DataGridTextColumn Binding="{Binding SupplierGroup}" MinWidth="100" Header="Supplier Group" />
         </DataGrid.Columns>
       </DataGrid>
       <TextBlock FontSize="24" Text="{Binding ErrorMessage}" Foreground="Red" Grid.Column="1" Grid.Row="2" />
@@ -66,19 +66,19 @@
 
         <Border BorderBrush="LightBlue" Margin="0" Padding="0" CornerRadius="5" BorderThickness="2" Grid.Column="1" Grid.ColumnSpan="3">
           <WrapPanel VerticalAlignment="Stretch">
-            <Button Grid.Column="1" x:Name="RefreshButton" Command="{Binding RefreshDataCommand}"  Margin="10, 3" MinWidth="70" Content="Refresh Item Codes" HorizontalAlignment="Right" />
+            <Button Grid.Column="1" x:Name="RefreshButton" Command="{Binding RefreshDataCommand}"  Margin="10, 3" MinWidth="70" Content="Refresh Supplier Codes" HorizontalAlignment="Right" />
             
-            <Button Grid.Column="1" x:Name="AddItemButton" Command="{Binding AddItemCommand}"  Margin="10, 3" MinWidth="70" Content="Add Item Code" HorizontalAlignment="Right" />
+            <Button Grid.Column="1" x:Name="AddSupplierButton" Command="{Binding AddSupplierCommand}"  Margin="10, 3" MinWidth="70" Content="Add Supplier Code" HorizontalAlignment="Right" />
             
-            <Button Grid.Column="2" Margin="10, 3" MinWidth="70" Command="{Binding UpdateItemCommand}" Content="Update Item Code" HorizontalAlignment="Center" x:Name="UpdateItemButton" />
+            <Button Grid.Column="2" Margin="10, 3" MinWidth="70" Command="{Binding UpdateSupplierCommand}" Content="Update Supplier Code" HorizontalAlignment="Center" x:Name="UpdateSupplierButton" />
 
-            <Button Grid.Column="2" Margin="10, 3" MinWidth="70" Command="{Binding SearchItemCodeCommand}" Content="Search New Item Code" HorizontalAlignment="Center" x:Name="SearchItemCodeButton" />
+            <Button Grid.Column="2" Margin="10, 3" MinWidth="70" Command="{Binding SearchSupplierCodeCommand}" Content="Search New Supplier Code" HorizontalAlignment="Center" x:Name="SearchSupplierCodeButton" />
 
-            <Button Grid.Column="3" IsVisible="False" Command="{Binding AddItemCommand}" Margin="10, 3" MinWidth="70" Content="Database Settings" HorizontalAlignment="Left" x:Name="DatabaseSettingsButton" IsCancel="True" />
+            <Button Grid.Column="3" IsVisible="False" Command="{Binding AddSupplierCommand}" Margin="10, 3" MinWidth="70" Content="Database Settings" HorizontalAlignment="Left" x:Name="DatabaseSettingsButton" IsCancel="True" />
           </WrapPanel>
         </Border>
         
-        <Button Grid.Column="2" Margin="40, 3" MinWidth="70" Command="{Binding LoadSuppliersCommand}" Content="Load Supplier Codes" HorizontalAlignment="Center" x:Name="LoadSuppliersCodeButton" />
+        <Button Grid.Column="2" Margin="40, 3" MinWidth="70" Command="{Binding LoadStockItemsCommand}" Content="Load Item Codes" HorizontalAlignment="Center" x:Name="LoadItemCodeButton" />
 
         <Button Grid.Column="1" x:Name="MoreButton" Command="{Binding MoreCommand}" Margin="3" IsVisible="False" MinWidth="70" Content="More..." HorizontalAlignment="Right" />
 
