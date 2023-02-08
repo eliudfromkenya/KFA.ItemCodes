@@ -61,6 +61,7 @@ namespace KFA.ItemCodes.ViewModels
              {
                  try
                  {
+                     App.MainWindow.FindControl<ItemsMainWindow>("ItemsPage").IsVisible = true;
                     //KFA.ItemCodes.Views.MainWindow.Page.Show();
                  }
                  catch (Exception ex)

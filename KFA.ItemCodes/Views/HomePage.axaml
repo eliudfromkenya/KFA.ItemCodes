@@ -1,0 +1,41 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:KFA.ItemCodes.ViewModels"
+        xmlns:views="using:KFA.ItemCodes.Views"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" FontSize="18"
+        x:Class="KFA.ItemCodes.Views.HomePage"
+        SystemDecorations="BorderOnly"
+        Icon="/Assets/avalonia-logo.ico" WindowState="Maximized"
+        Title="KFA Item Codes">
+  
+  <Design.DataContext>
+    <vm:MainWindowViewModel />
+  </Design.DataContext>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="1" />
+      <RowDefinition />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="1" />
+    </Grid.RowDefinitions>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="1" />
+      <ColumnDefinition Width="*" />
+      <ColumnDefinition Width="1" />
+    </Grid.ColumnDefinitions>
+    
+      <Grid Name="MainPanel" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="1" Grid.Row="1">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+         <views:ItemsMainWindow Name="ItemsPage" Height="{Binding #HomePage.Height}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" IsVisible="True"/>
+         <views:SupplierMainWindow Height="{Binding #HomePage.Height}" IsVisible="{Binding !#ItemsPage.IsVisible}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+    </Grid>
+  </Grid>
+</Window>

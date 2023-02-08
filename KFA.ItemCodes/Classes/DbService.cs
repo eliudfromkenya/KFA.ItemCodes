@@ -93,9 +93,9 @@ FROM
                 {
                     try
                     {
-                        sql = $"SELECT ITEM_CODE FROM ITEM_MASTER WHERE ITEM_CODE = '{itemCode}' AND BUY_PRICE > 0";
-                       if (GetDb2Scalar(sql)?.ToString() == itemCode)
-                            throw new AccessViolationException("Can not update the record because it currently contains stocks in branch POS(es)");
+                       // sql = $"SELECT ITEM_CODE FROM ITEM_MASTER WHERE ITEM_CODE = '{itemCode}' AND BUY_PRICE > 0";
+                       //if (GetDb2Scalar(sql)?.ToString() == itemCode)
+                       //     throw new AccessViolationException("Can not update the record because it currently contains stocks in branch POS(es)");
                     }
                     catch (AccessViolationException)
                     {
@@ -217,46 +217,46 @@ where LENGTH(group_id) = 2;";
             return new();
         }
  
-        public static DataSet GetDb2DataSet(string sql, params IDbDataParameter[] parameters)
-        {
-            var con = new ConnectionObject().MaliplusConnection;
-            if (con.State != ConnectionState.Open)
-                con.Open();
+        //public static DataSet GetDb2DataSet(string sql, params IDbDataParameter[] parameters)
+        //{
+        //    var con = new ConnectionObject().MaliplusConnection;
+        //    if (con.State != ConnectionState.Open)
+        //        con.Open();
 
-             return Functions.GetDbDataSet(con, sql);
-        }
+        //     return Functions.GetDbDataSet(con, sql);
+        //}
 
-        public static object GetDb2Scalar(string sql, params IDbDataParameter[] parameters)
-        {
-            var con = new ConnectionObject().MaliplusConnection;
-            if (con.State != ConnectionState.Open)
-                con.Open();
+        //public static object GetDb2Scalar(string sql, params IDbDataParameter[] parameters)
+        //{
+        //    var con = new ConnectionObject().MaliplusConnection;
+        //    if (con.State != ConnectionState.Open)
+        //        con.Open();
 
-            using var cmd = con.CreateCommand();
-            cmd.CommandText = sql;
+        //    using var cmd = con.CreateCommand();
+        //    cmd.CommandText = sql;
 
-            if (parameters != null)
-                foreach (var par in parameters)
-                    cmd.Parameters.Add(par);
+        //    if (parameters != null)
+        //        foreach (var par in parameters)
+        //            cmd.Parameters.Add(par);
 
-            return cmd.ExecuteScalar();
-        }
+        //    return cmd.ExecuteScalar();
+        //}
 
-        public static int ExecuteDb2NonQuery(string sql, params IDbDataParameter[] parameters)
-        {
-            var con = new ConnectionObject().MaliplusConnection;            
-            if (con.State != ConnectionState.Open)
-                con.Open();
+        //public static int ExecuteDb2NonQuery(string sql, params IDbDataParameter[] parameters)
+        //{
+        //    var con = new ConnectionObject().MaliplusConnection;            
+        //    if (con.State != ConnectionState.Open)
+        //        con.Open();
 
-            using var cmd = con.CreateCommand();
-            cmd.CommandText = sql;
+        //    using var cmd = con.CreateCommand();
+        //    cmd.CommandText = sql;
 
-            if (parameters != null)
-                foreach (var par in parameters)
-                    cmd.Parameters.Add(par);
+        //    if (parameters != null)
+        //        foreach (var par in parameters)
+        //            cmd.Parameters.Add(par);
 
-            return cmd.ExecuteNonQuery();
-        }
+        //    return cmd.ExecuteNonQuery();
+        //}
 
         public static DataSet GetMySqlDataSet(string sql, params IDbDataParameter[] parameters)
         {

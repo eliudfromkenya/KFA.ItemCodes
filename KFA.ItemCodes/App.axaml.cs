@@ -8,6 +8,7 @@ namespace KFA.ItemCodes
 {
     public partial class App : Application
     {
+        public static HomePage MainWindow { get; set; }
         public override void Initialize()
         {
             AvaloniaXamlLoader.Load(this);
@@ -17,8 +18,7 @@ namespace KFA.ItemCodes
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                desktop.MainWindow = new MainWindow();
-                
+                desktop.MainWindow = MainWindow =  new HomePage();                
             }
 
             base.OnFrameworkInitializationCompleted();

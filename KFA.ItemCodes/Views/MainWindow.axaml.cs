@@ -12,8 +12,11 @@ using System.Reactive.Linq;
 
 namespace KFA.ItemCodes.Views
 {
-    public partial class MainWindow : ReactiveWindow<MainItemsWindowViewModel>
-    {        
-        
+    public partial class MainWindow : ReactiveWindow<MainWindowViewModel>
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
     }
 }
