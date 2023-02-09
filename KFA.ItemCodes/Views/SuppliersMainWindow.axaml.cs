@@ -14,7 +14,7 @@ using System.Reactive.Linq;
 
 namespace KFA.ItemCodes.Views
 {
-    public partial class SupplierMainWindow : ReactiveWindow<MainSupplierWindowViewModel>
+    public partial class SupplierMainWindow : ReactiveUserControl<MainSupplierWindowViewModel>
     {
         private static SupplierMainWindow? page;
         public static SupplierMainWindow Page { get => page ?? new SupplierMainWindow(); }

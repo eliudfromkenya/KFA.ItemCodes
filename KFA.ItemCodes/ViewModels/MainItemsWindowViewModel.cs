@@ -14,54 +14,54 @@ using System.Windows.Input;
 
 namespace KFA.ItemCodes.ViewModels
 {
-    public class MainSupplierWindowViewModel : ViewModelBase
+    public class MainItemsWindowViewModel : ViewModelBase
     {
-        internal static SupplierMainWindow MainWindow;
-        internal static ObservableCollection<SupplierCode> models;
-        private SupplierCode selectedItem;
+        internal static ItemsMainWindow MainWindow;
+        internal static ObservableCollection<ItemCode> models;
+        private ItemCode selectedItem;
         private string message;
         private string errorMessage;
-        internal static ObservableCollection<Branch> itemGroups;
+        internal static ObservableCollection<ItemGroup> itemGroups;
 
         public string? Message { get => message; set => this.RaiseAndSetIfChanged(ref message, value); }
         public string? ErrorMessage { get => errorMessage; set => this.RaiseAndSetIfChanged(ref errorMessage, value); }
 
         public ICommand RefreshDataCommand { get; }
-        public ICommand LoadStockItemsCommand { get; }
-        public ICommand AddSupplierCommand { get; }
-        public ICommand UpdateSupplierCommand { get; }
+        public ICommand LoadSuppliersCommand { get; }
+        public ICommand AddItemCommand { get; }
+        public ICommand UpdateItemCommand { get; }
         public ICommand MoreCommand { get; }
-        public ICommand SearchSupplierCodeCommand { get; }
+        public ICommand SearchItemCodeCommand { get; }
         public static BehaviorSubject<(string? title, string? message, Exception? ex)> ErrorNotifications { get; set; } = new((null, null, null));
 
         public static BehaviorSubject<(string? title, string? message)> Notifications { get; set; } = new((null, null));
 
-        public SupplierCode SelectedItem { get => selectedItem; set => this.RaiseAndSetIfChanged(ref selectedItem, value); }
-        public ObservableCollection<SupplierCode> Models { get => models; set => this.RaiseAndSetIfChanged(ref models, value); }
-        public static ObservableCollection<Branch> Branches { get => itemGroups; set => itemGroups = value; }
+        public ItemCode SelectedItem { get => selectedItem; set => this.RaiseAndSetIfChanged(ref selectedItem, value); }
+        public ObservableCollection<ItemCode> Models { get => models; set => this.RaiseAndSetIfChanged(ref models, value); }
+        public ObservableCollection<ItemGroup> ItemGroups { get => itemGroups; set => itemGroups = value; }
 
-        public MainSupplierWindowViewModel()
+        public MainItemsWindowViewModel()
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
             RefreshDataCommand = ReactiveCommand.CreateFromTask(async() => RefreshData());
             MoreCommand = ReactiveCommand.CreateFromTask(async tt => await MoreCommands(tt));
-            AddSupplierCommand = ReactiveCommand.CreateFromTask(AddSupplier);
-            UpdateSupplierCommand = ReactiveCommand.CreateFromTask(UpdateSupplierCode);
-            SearchSupplierCodeCommand = ReactiveCommand.CreateFromTask(SearchSupplierCode);
-            LoadStockItemsCommand = ReactiveCommand.CreateFromTask(LoadStockItems);
+            AddItemCommand = ReactiveCommand.CreateFromTask(AddItem);
+            UpdateItemCommand = ReactiveCommand.CreateFromTask(UpdateItemCode);
+            SearchItemCodeCommand = ReactiveCommand.CreateFromTask(SearchItemCode);
+            LoadSuppliersCommand = ReactiveCommand.CreateFromTask(LoadSuppliers);
             RefreshData();
             Notifications.Subscribe(OnMessageRecieved);
 
             ErrorNotifications.Subscribe(OnErrorMessageRecieved);
         }
 
-        private async Task LoadStockItems()
+        private async Task LoadSuppliers()
         {
             await Task.Run(() => Functions.RunOnMain(() =>
              {
                  try
                  {
-                    //KFA.ItemCodes.Views.MainWindow.Page.Show();
+                    // SupplierMainWindow.Page.Show();
                  }
                  catch (Exception ex)
                  {
@@ -121,15 +121,15 @@ namespace KFA.ItemCodes.ViewModels
             });
         }
 
-        private async Task SearchSupplierCode()
+        private async Task SearchItemCode()
         {
             await Task.Run(() => Functions.RunOnMain(() =>
             {
-                var page = new SearchSuppliersPage
+                var page = new SearchItemsPage
                 {
-                    SearchBasedSupplierCode = SelectedItem?.Code,
+                    SearchBasedItemCode = SelectedItem?.Code,
                     SearchBasedName = MainWindow.FindControl<AutoCompleteBox>("TxtSearch")?.Text,
-                    SupplierCodes = Models?.ToList() ?? new(),
+                    ItemCodes = Models?.ToList() ?? new(),
                     WindowState = WindowState.Maximized
                 };
                 page.Show();
@@ -138,7 +138,7 @@ namespace KFA.ItemCodes.ViewModels
             }));
         }
 
-        private async Task UpdateSupplierCode()
+        private async Task UpdateItemCode()
         {
             await Task.Run(() => Functions.RunOnMain(() =>
           {
@@ -147,16 +147,16 @@ namespace KFA.ItemCodes.ViewModels
                   if (SelectedItem == null)
                       throw new Exception("Please select the item to update");
 
-                  EditSupplierPage.SupplierCode = SelectedItem?.Code;
-                  EditSupplierPage.SupplierName = SelectedItem?.OriginalName;
-                  EditSupplierPage.isUpdate = true;
+                  EditItemPage.ItemCode = SelectedItem?.Code;
+                  EditItemPage.ItemName = SelectedItem?.OriginalName;
+                  EditItemPage.isUpdate = true;
 
-                  var page = new EditSupplierPage
+                  var page = new EditItemPage
                   {
                       WindowState = WindowState.Maximized,
-                      Branch = SelectedItem?.Branch
+                      Supplier = SelectedItem?.Distributor
                   };
-                  page.FindControl<AutoCompleteBox>("TxtSupplierCode").IsEnabled = false;
+                  page.FindControl<AutoCompleteBox>("TxtItemCode").IsEnabled = false;
                   page.Show();
                   page.WindowState = WindowState.Maximized;
                   //page.Topmost = true;
@@ -168,16 +168,16 @@ namespace KFA.ItemCodes.ViewModels
           }));
         }
 
-        private async Task AddSupplier()
+        private async Task AddItem()
         {
             await Task.Run(() => Functions.RunOnMain(() =>
              {
                  try
                  {
-                     EditSupplierPage.SupplierName = MainWindow.FindControl<AutoCompleteBox>("TxtSearch")?.Text;
+                     EditItemPage.ItemName = MainWindow.FindControl<AutoCompleteBox>("TxtSearch")?.Text;
 
-                     EditSupplierPage.isUpdate = false;
-                     var page = new EditSupplierPage
+                     EditItemPage.isUpdate = false;
+                     var page = new EditItemPage
                      {
                          WindowState = WindowState.Maximized
                      };
@@ -199,15 +199,13 @@ namespace KFA.ItemCodes.ViewModels
             {
                 try
                 {
-                    var (suppliers, branches) = SupplierDbService.RefreshMySQLSuppliers();
-                    var models = new ObservableCollection<SupplierCode>(suppliers);
-                    var allBranches = new ObservableCollection<Branch>(branches);
+                    var (items, groups) = DbService.RefreshMySQLItems();
+                    var models = new ObservableCollection<ItemCode>(items);
+                    var itemGrps = new ObservableCollection<ItemGroup>(groups);
                     Functions.RunOnMain(() =>
                     {
                         Models = models;
-                        Branches = allBranches;
-                        if (MainWindow.FindControl<AutoCompleteBox>("TxtBranchCode") is AutoCompleteBox auto)
-                            auto.Items = allBranches.Select(x => $"{x.Code}-{x.BranchName}").ToList();
+                        ItemGroups = itemGrps;
                     });
                 }
                 catch (Exception ex)

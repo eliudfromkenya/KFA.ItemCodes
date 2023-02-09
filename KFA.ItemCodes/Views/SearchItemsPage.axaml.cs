@@ -89,7 +89,7 @@ namespace KFA.ItemCodes.Views
                     v.itemFrom,
                     v.itemTo,
                     v.count,
-                    Group = MainWindowViewModel.itemGroups.FirstOrDefault(m => m.GroupId == v.itemFrom?[..2])?.GroupName,
+                    Group = MainItemsWindowViewModel.itemGroups.FirstOrDefault(m => m.GroupId == v.itemFrom?[..2])?.GroupName,
                     Text = v.count == 0 ? v.itemFrom : $"{v.itemFrom}-{v.itemTo} ({v.count + 1} spaces)"
                 });
                 EditItemPage.ItemCode = items?.First().itemFrom;
@@ -111,7 +111,7 @@ namespace KFA.ItemCodes.Views
                     v.itemFrom,
                     v.itemTo,
                     v.count,
-                    Group = MainWindowViewModel.itemGroups.FirstOrDefault(m => m.GroupId == v.itemFrom?[..2])?.GroupName,
+                    Group = MainItemsWindowViewModel.itemGroups.FirstOrDefault(m => m.GroupId == v.itemFrom?[..2])?.GroupName,
                     Text = v.count == 0 ? v.itemFrom : $"{v.itemFrom}-{v.itemTo} ({v.count + 1} spaces)"
                 }); 
                 EditItemPage.ItemCode = items?.First().itemFrom;

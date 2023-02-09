@@ -45,7 +45,7 @@ namespace KFA.ItemCodes.Views
             {
                 using var excelPackage = new ExcelPackage();
                 var repo = new MsExcelReportService();
-                repo.GenerateDulplicatedItemCodes2Report(excelPackage, MainWindowViewModel.models.ToList(), @"C:\Users\Eliud\Desktop\Excel Working Files", "all Branches");
+                repo.GenerateDulplicatedItemCodes2Report(excelPackage, MainItemsWindowViewModel.models.ToList(), @"C:\Users\Eliud\Desktop\Excel Working Files", "all Branches");
                 MessageFound("done");
             }
             catch (Exception ex)

@@ -89,12 +89,12 @@ namespace KFA.ItemCodes
 
         internal static void NotifyError(Exception ex)
         {
-            MainWindowViewModel.ErrorNotifications.OnNext(("Error", ex.Message, ex));
+            MainItemsWindowViewModel.ErrorNotifications.OnNext(("Error", ex.Message, ex));
         }
 
         internal static void NotifyError(string message, string v, Exception ex)
         {
-            MainWindowViewModel.ErrorNotifications.OnNext((v, message, ex));
+            MainItemsWindowViewModel.ErrorNotifications.OnNext((v, message, ex));
         }
 
         public static void NewContentDialog<TContentDialog>(this WindowBase owner,
@@ -213,7 +213,7 @@ namespace KFA.ItemCodes
 
         internal static void Notify(string message, string title = "Codes")
         {
-            MainWindowViewModel.Notifications.OnNext((title, message));
+            MainItemsWindowViewModel.Notifications.OnNext((title, message));
         }
     }
 }

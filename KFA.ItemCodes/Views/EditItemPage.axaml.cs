@@ -38,7 +38,7 @@ namespace KFA.ItemCodes.Views
             {
                 try
                 {
-                    txtGroup.Text = MainWindowViewModel.itemGroups.FirstOrDefault(m => m.GroupId == txtCode.Text?[..2])?.GroupName;
+                    txtGroup.Text = MainItemsWindowViewModel.itemGroups.FirstOrDefault(m => m.GroupId == txtCode.Text?[..2])?.GroupName;
                 }
                 catch { }
             };
@@ -81,7 +81,7 @@ namespace KFA.ItemCodes.Views
                       await DbService.SaveItem(itemCode, itemName, supplier, isUpdate);
                       if(isUpdate)
                       {
-                          var item = MainWindowViewModel.models.FirstOrDefault(c => c.Code == itemCode);
+                          var item = MainItemsWindowViewModel.models.FirstOrDefault(c => c.Code == itemCode);
                           if (item != null)
                           {
                               item.OriginalName = itemName;
@@ -93,7 +93,7 @@ namespace KFA.ItemCodes.Views
                       {
                           List<ItemCode> items = new() { new ItemCode { Code = itemCode, Name = itemName, OriginalName = itemName, Distributor = supplier } };
                            Matcher.CheckCodes(ref items);
-                          MainWindowViewModel.models.AddRange(items);
+                          MainItemsWindowViewModel.models.AddRange(items);
                             Functions.Notify($"Successfully added item {itemCode} - {itemName}");
                       }
 

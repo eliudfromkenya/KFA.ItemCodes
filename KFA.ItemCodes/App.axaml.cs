@@ -17,7 +17,7 @@ namespace KFA.ItemCodes
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                desktop.MainWindow = MainWindow.Page;
+                desktop.MainWindow = new MainWindow();
                 
             }
 

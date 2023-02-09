@@ -71,13 +71,13 @@ FROM
                 string sql;
                 if (!isUpdate)
                 {
-                    var duplicate = MainWindowViewModel.models.FirstOrDefault(n => n.HarmonizedName ==  name.harmonizedName);
+                    var duplicate = MainItemsWindowViewModel.models.FirstOrDefault(n => n.HarmonizedName ==  name.harmonizedName);
                     if (duplicate != null)
                     {
                         throw new Exception($"Item with the same name already exists: (Item {duplicate.Code}: {duplicate.Name})");
                     }
 
-                    duplicate = MainWindowViewModel.models.FirstOrDefault(n => Matcher.LaveteshinDistanceAlgorithmBody(n.HarmonizedName ?? "", name.harmonizedName ?? "") == 0);
+                    duplicate = MainItemsWindowViewModel.models.FirstOrDefault(n => Matcher.LaveteshinDistanceAlgorithmBody(n.HarmonizedName ?? "", name.harmonizedName ?? "") == 0);
                     if (duplicate != null)
                     {
                         throw new Exception($"Item with the same name already exists: (Item {duplicate.Code}: {duplicate.Name})");
