@@ -154,7 +154,7 @@ namespace KFA.ItemCodes.ViewModels
                   var page = new EditSupplierPage
                   {
                       WindowState = WindowState.Maximized,
-                      Supplier = SelectedItem?.Branch
+                      Branch = SelectedItem?.Branch
                   };
                   page.FindControl<AutoCompleteBox>("TxtSupplierCode").IsEnabled = false;
                   page.Show();
@@ -199,13 +199,15 @@ namespace KFA.ItemCodes.ViewModels
             {
                 try
                 {
-                    var (items, groups) = DbService.RefreshMySQLSuppliers();
-                    var models = new ObservableCollection<SupplierCode>(items);
-                    var itemGrps = new ObservableCollection<Branch>(groups);
+                    var (suppliers, branches) = SupplierDbService.RefreshMySQLSuppliers();
+                    var models = new ObservableCollection<SupplierCode>(suppliers);
+                    var allBranches = new ObservableCollection<Branch>(branches);
                     Functions.RunOnMain(() =>
                     {
                         Models = models;
-                        Branchs = itemGrps;
+                        Branches = allBranches;
+                        if (MainWindow.FindControl<AutoCompleteBox>("TxtBranchCode") is AutoCompleteBox auto)
+                            auto.Items = allBranches.Select(x => $"{x.Code}-{x.BranchName}").ToList();
                     });
                 }
                 catch (Exception ex)

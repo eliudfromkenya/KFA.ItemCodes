@@ -155,78 +155,7 @@ FROM
                     con = new ConnectionObject().MySQLDbConnection;
                 }
 
-                var sql = @"
-DROP TABLE IF EXISTS supp_codes;
-DROP TABLE IF EXISTS supp_ledgers;
-DROP TABLE IF EXISTS not_existing_ledgers;
-
-CREATE TEMPORARY TABLE supp_codes AS SELECT
-	tbl_suppliers.supplier_code, 
-	tbl_suppliers.description, 
-	tbl_suppliers.telephone, 
-	tbl_suppliers.email, 
-	tbl_suppliers.address
-FROM
-	tbl_suppliers;
-	
-CREATE TEMPORARY TABLE supp_ledgers AS SELECT
-	tbl_ledger_accounts.ledger_account_code, 
-	tbl_ledger_accounts.description
-FROM
-	tbl_ledger_accounts;
-	
-CREATE TEMPORARY TABLE not_existing_ledgers AS SELECT
-	tbl_ledger_accounts.ledger_account_code, 
-	tbl_ledger_accounts.description
-FROM
-	tbl_ledger_accounts WHERE ledger_account_code NOT IN (SELECT supplier_code FROM supp_codes) ;
-	
-UPDATE supp_codes, supp_ledgers SET supp_codes.description = supp_ledgers.description
-	WHERE supp_codes.supplier_code = supp_ledgers.ledger_account_code;
-	
-INSERT INTO supp_codes (supplier_code, description) SELECT ledger_account_code supplier_code, description FROM not_existing_ledgers; 
-
-SELECT
-	supplier_code, 
-	description, 
-	telephone, 
-	email, 
-	address
-FROM
-	supp_codes;
-	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-SELECT
+                var sql = @"SELECT
 	-- tbl_ledger_accounts.ledger_account_id, 
 	tbl_ledger_accounts.ledger_account_code, 
 	tbl_ledger_accounts.description supplier_name, 
@@ -239,6 +168,24 @@ FROM
 	tbl_cost_centres
 	ON 
 		SUBSTRING(tbl_ledger_accounts.ledger_account_code, 1, 3) = tbl_cost_centres.supplier_code_prefix;
+		
+		
+		
+SELECT
+	tbl_suppliers.supplier_code, 
+	tbl_suppliers.description, 
+	tbl_suppliers.telephone, 
+	tbl_suppliers.email, 
+	tbl_suppliers.address,
+	tbl_cost_centres.cost_centre_code, 
+	tbl_cost_centres.description branch_name, 
+	tbl_cost_centres.supplier_code_prefix
+FROM
+	tbl_suppliers
+	INNER JOIN
+	tbl_cost_centres
+	ON 
+		SUBSTRING(tbl_suppliers.supplier_code, 1, 3) = tbl_cost_centres.supplier_code_prefix;
 
 SELECT
 	tbl_cost_centres.cost_centre_code, 
@@ -247,8 +194,57 @@ SELECT
 FROM
 	tbl_cost_centres WHERE tbl_cost_centres.supplier_code_prefix IS NOT NULL;";
                 using var ds =  Functions.GetDbDataSet(con, sql);
-                using var table= ds.Tables[0];
-                var suppliers = table.AsEnumerable().Select(row => new { SupplierCode = row[0].ToString(), SupplierName = row[1].ToString(),  CostCentreCode = row[2].ToString(),  BranchName = row[3].ToString(),  Prefix = row[4].ToString() })
+                var suppliers = ds.Tables[1].AsEnumerable().Select(m => new
+                {
+                    Code = m[0].ToString(),
+                    Name = m[1].ToString()
+                }).ToList();
+
+
+                for (int i = 0; i < ds.Tables[0].Rows.Count; i++)
+                {
+                    var row = ds.Tables[1].Rows[i];
+                    var code = row[0].ToString();
+                    var name = row[1].ToString();
+                    var supplier = suppliers.FirstOrDefault(n => n.Code == code);
+                    if(supplier != null)
+                    {
+                        if(supplier.Name != name)
+                            ds.Tables[1].Rows[suppliers.IndexOf(supplier)][1] = name;
+                    }
+                    else
+                    {
+                        var rw = ds.Tables[1].NewRow();
+                        rw[0] = code;
+                        rw[1] = name;
+                        rw[5] = row[2];
+                        rw[6] = row[3];
+                        rw[7] = row[4];
+                        ds.Tables[1].Rows.Add(rw);
+                    }
+                }
+
+                using var table= ds.Tables[1];
+                using var table2 = ds.Tables[2];
+                var groups = table2.AsEnumerable().Select(row => new Branch
+                {
+                    Code = row[0].ToString(),
+                    BranchName = row[1].ToString(),
+                    Prefix = row[2].ToString(),
+                }).ToList();
+
+                var allSuppliers = table.AsEnumerable().Select(row =>
+                new
+                {
+                    SupplierCode = row[0].ToString(),
+                    SupplierName = row[1].ToString(),
+                    Telephone = row[2].ToString(),
+                    Email = row[3].ToString(),
+                    Address = row[4].ToString(),
+                    CostCentreCode = row[5].ToString(),
+                    BranchName = row[6].ToString(),
+                    Prefix = row[7].ToString()
+                })
                     .OrderBy(c => !string.IsNullOrWhiteSpace(c.SupplierName))
                     .ThenBy(c => c.SupplierCode)
                     .ThenBy(c => c.SupplierCode?.Length)
@@ -260,36 +256,21 @@ FROM
                         {
                             Code = m.Key,
                             Name = itm?.SupplierName,
-                            OriginalName= itm?.SupplierName,
-                            Branch =  new Branch
+                            OriginalName = itm?.SupplierName,
+                            Address = itm?.Address,
+                            Telephone = itm?.Telephone,
+                            Email = itm?.Email,
+                            Branch = groups.FirstOrDefault(na => na.Prefix == itm?.SupplierCode?.Substring(0,3)) 
+                            ?? new Branch
                             {
-                                 BranchName= itm?.BranchName,
-                                 Code=itm?.CostCentreCode,
-                                 Prefix= itm?.Prefix
+                                BranchName = itm?.BranchName,
+                                Code = itm?.CostCentreCode,
+                                Prefix = itm?.Prefix
                             }
                         };
-                    }).Where(m => !string.IsNullOrWhiteSpace(m.Name) && CustomValidations.IsValidSupplierCode(m?.Code)).ToList();
+                    }).Where(m => !string.IsNullOrWhiteSpace(m.Name) && CustomValidations.IsValidSupplierCode(m?.Code??"")).ToList();
 
-                using var table2 = ds.Tables[1];
-                var groups = table2.AsEnumerable().Select(row => new Branch
-                {
-                    Code = row[0].ToString(),
-                    BranchName = row[1].ToString(),
-                    Prefix = row[2].ToString(),
-                }).ToList();
-
-                foreach (var supplier in suppliers)
-                {
-                    try
-                    {
-                        var branch = groups.FirstOrDefault(c => c.Prefix == supplier?.Code?[..3]);
-                        if (branch != null)
-                            supplier.Branch = branch;
-                    }
-                    catch { }
-                }
-
-                return (suppliers, groups);
+              return (allSuppliers, groups);
             }
             catch (Exception ex)
             {

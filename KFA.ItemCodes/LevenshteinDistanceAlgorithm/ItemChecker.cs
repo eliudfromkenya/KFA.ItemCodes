@@ -93,6 +93,31 @@ internal class ItemChecker
         return objs;
     }
 
+
+
+    internal static List<LevenshteinDistanceAlgorithm.SupplierCode> SearchSupplierByName(string itemCodeToSearch, List<LevenshteinDistanceAlgorithm.SupplierCode> allItemsCodes)
+    {
+        try
+        {
+            var ans = itemCodeToSearch?.HarmonizeName()?.ToUpper();
+
+            if (ans?.StartsWith("Q") ?? false) return new();
+
+            var body = new StringBuilder();
+
+            var items = allItemsCodes.Where(v => v.Code == ans).ToList();
+            items.AddRange(allItemsCodes
+                .OrderBy(n => Matcher.LaveteshinDistanceAlgorithmBody(n.Name.HarmonizeName() ?? "", ans ?? ""))
+                .Take(40));
+            return items;
+        }
+        catch (Exception ex)
+        {
+            Functions.NotifyError(ex);
+        }
+        return new();
+    }
+
     internal static List<LevenshteinDistanceAlgorithm.ItemCode> SearchItemByName(string itemCodeToSearch, List<LevenshteinDistanceAlgorithm.ItemCode> allItemsCodes)
     {
         try

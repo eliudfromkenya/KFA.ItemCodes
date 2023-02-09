@@ -420,8 +420,7 @@ namespace LevenshteinDistanceAlgorithm
 
         public static short LaveteshinDistanceAlgorithm(ItemCode code, ItemCode code2)
         {
-            var level = (short)(Fuzz.PartialRatio(code.HarmonizedName ?? "", code2.HarmonizedName ?? ""));
-            //short level = LaveteshinDistanceAlgorithmBody(code.HarmonizedName ?? "", code2.HarmonizedName ?? "");
+            short level = LaveteshinDistanceAlgorithmBody(code.HarmonizedName ?? "", code2.HarmonizedName ?? "");
             if (string.IsNullOrWhiteSpace(code.MeasureUnit)
                 || string.IsNullOrWhiteSpace(code.MeasureUnit))
                 level += 2;
@@ -432,6 +431,8 @@ namespace LevenshteinDistanceAlgorithm
 
         public static short LaveteshinDistanceAlgorithmBody(string s, string t)
         {
+            var ma = (short)(Fuzz.PartialRatio(s ?? "", t ?? ""));
+            return (short)(ma * -1);
             s = s.ToUpper();
             t = t.ToUpper();
 

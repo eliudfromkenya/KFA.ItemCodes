@@ -30,12 +30,20 @@
         <RowDefinition Height="Auto" />
         <RowDefinition Height="Auto" />
         <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
       </Grid.RowDefinitions>
       <Grid>
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="Auto" />
           <ColumnDefinition Width="Auto" />
           <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="Auto" />
           <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
@@ -44,7 +52,10 @@
         </Grid.RowDefinitions>
         <Label Grid.Column="1" VerticalAlignment="Center" Content="Search" Opacity=".7" />
         <AutoCompleteBox Grid.Column="2"  MinWidth="150" Margin="0" Name="TxtSearch" BorderBrush="LightBlue" VerticalAlignment="Center" BorderThickness="1" />
-        <Button Name="BtnRefresh" Grid.Column="3" Margin="10" VerticalAlignment="Center" MinWidth="70" IsDefault="True" Content="Go" HorizontalAlignment="Right" />
+        <Label Grid.Column="3" Margin="30,0,0,0"  VerticalAlignment="Center" Content="Branch Code" Opacity=".7" />
+        <AutoCompleteBox Grid.Column="4" Text="3100"  MinWidth="80" Margin="0" Name="TxtBranchCode" BorderBrush="LightBlue" VerticalAlignment="Center" BorderThickness="1" />
+        <Label Grid.Column="5" VerticalAlignment="Center" Name="lblBranchName" Foreground="AliceBlue" Content="Nakuru Branch" Opacity=".7" />
+        <Button Name="BtnRefresh" Grid.Column="6" Margin="10" VerticalAlignment="Center" MinWidth="70" IsDefault="True" Content="Go" HorizontalAlignment="Right" />
       </Grid>
       <DataGrid HorizontalAlignment="Stretch" Name="DgSuppliers"  Grid.Row="1" BorderThickness="1" RowHeight="{Binding ListRowHeight}" Width="1000" Items="{Binding Models}" FontSize="24" Background="Transparent" SelectedItem="{Binding SelectedSupplier}"
            SelectionMode="Extended" HorizontalScrollBarVisibility="Auto" VerticalAlignment="Stretch"
@@ -54,8 +65,9 @@
             Header="✔" Binding="{Binding RecordIsSelected}" />
           <DataGridTextColumn Binding="{Binding Code}" MinWidth="100" Header="Supplier Code" />
           <DataGridTextColumn Binding="{Binding OriginalName}" MinWidth="300" Header="Supplier Name" />
-          <DataGridTextColumn Binding="{Binding Distributor}" MinWidth="45" Header="Distributor" />
-          <DataGridTextColumn Binding="{Binding SupplierGroup}" MinWidth="100" Header="Supplier Group" />
+          <DataGridTextColumn Binding="{Binding Telephone}" MinWidth="105" Header="Phone Number" />
+          <DataGridTextColumn Binding="{Binding Address}" MinWidth="150" Header="Address" />
+          <DataGridTextColumn Binding="{Binding Branch.BranchName}" MinWidth="300" Header="Branch" />
         </DataGrid.Columns>
       </DataGrid>
       <TextBlock FontSize="24" Text="{Binding ErrorMessage}" Foreground="Red" Grid.Column="1" Grid.Row="2" />

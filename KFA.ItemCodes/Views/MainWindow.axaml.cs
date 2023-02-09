@@ -32,7 +32,7 @@ namespace KFA.ItemCodes.Views
              this.FindControl<Button>("CloseButton")
                 .Events().Click.Subscribe(cc =>
                 {
-                    this.Close();
+                     Environment.Exit(0);
                 }).DisposeWith(disposable);
 
             var searchCtrl = this.FindControl<AutoCompleteBox>("TxtSearch");

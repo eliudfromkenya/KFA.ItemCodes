@@ -18,8 +18,8 @@ namespace KFA.ItemCodes.Views
         {
             InitializeComponent();
             DataContext = this;
-            this.FindControl<Button>("BtnSearchBackwards").Click += (xx,yy) => Search_Forward();
-            this.FindControl<Button>("BtnSearchForwards").Click += (xx,yy) => Search_Backward();
+            //this.FindControl<Button>("BtnSearchBackwards").Click += (xx,yy) => Search_Forward();
+           // this.FindControl<Button>("BtnSearchForwards").Click += (xx,yy) => Search_Backward();
             this.FindControl<Button>("BtnAddSupplier").Click += (xx,yy) => {
                 try
                 {
@@ -64,63 +64,41 @@ namespace KFA.ItemCodes.Views
                     }
                     else if (!string.IsNullOrEmpty(SearchBasedName))
                     {
-                        var code = SupplierChecker
-                        .SearchSupplierByName(SearchBasedName, SupplierCodes)?
-                        .FirstOrDefault()?
-                        .Code;
+                        //var code = SupplierChecker
+                        //.SearchSupplierByName(SearchBasedName, SupplierCodes)?
+                        //.FirstOrDefault()?
+                        //.Code;
 
-                        if (CustomValidations.IsValidSupplierCode(code ?? ""))
-                            Functions.RunOnMain(() => this.FindControl<AutoCompleteBox>("TxtSearch").Text = code);
+                        //if (CustomValidations.IsValidSupplierCode(code ?? ""))
+                        //    Functions.RunOnMain(() => this.FindControl<AutoCompleteBox>("TxtSearch").Text = code);
                     }
                 }
                 catch { }
             });
         }
 
-        private void Search_Backward()
-        {
-            try
-            { 
-                var dgSuppliers = this.FindControl<DataGrid>("DgSuppliers");
-                var code = this.FindControl<AutoCompleteBox>("TxtSearch").Text;
-                var suppliers = SupplierChecker.SearchSupplierForward(code, SupplierCodes);
-                dgSuppliers.Items = suppliers.Select(v => new
-                {
-                    v.supplierFrom,
-                    v.supplierTo,
-                    v.count,
-                    Group = MainSupplierWindowViewModel.Branches.FirstOrDefault(m => m.Code == v.supplierFrom?[..6])?.GroupName,
-                    Text = v.count == 0 ? v.supplierFrom : $"{v.supplierFrom}-{v.supplierTo} ({v.count + 1} spaces)"
-                });
-                EditSupplierPage.SupplierCode = suppliers?.First().supplierFrom;
-            }
-            catch (Exception ex)
-            {
-                Functions.NotifyError(ex);
-            }
-        }
-
-        private void Search_Forward()
-        {
-            try
-            {
-                var code = this.FindControl<AutoCompleteBox>("TxtSearch").Text;
-                var suppliers = SupplierChecker.SearchSupplierBackward(code, SupplierCodes);
-                this.FindControl<DataGrid>("DgSuppliers").Items = suppliers.Select(v => new
-                {
-                    v.supplierFrom,
-                    v.supplierTo,
-                    v.count,
-                    Group = MainSupplierWindowViewModel.Branches.FirstOrDefault(m => m.Code == v.supplierFrom?[..6])?.GroupName,
-                    Text = v.count == 0 ? v.supplierFrom : $"{v.supplierFrom}-{v.supplierTo} ({v.count + 1} spaces)"
-                }); 
-                EditSupplierPage.SupplierCode = suppliers?.First().supplierFrom;
-            }
-            catch (Exception ex)
-            {
-                Functions.NotifyError(ex);
-            }
-        }
+       
+        //private void Search_Forward()
+        //{
+        //    try
+        //    {
+        //        var code = this.FindControl<AutoCompleteBox>("TxtSearch").Text;
+        //        var suppliers = SupplierChecker.SearchSupplierBackward(code, SupplierCodes);
+        //        this.FindControl<DataGrid>("DgSuppliers").Items = suppliers.Select(v => new
+        //        {
+        //            v.supplierFrom,
+        //            v.supplierTo,
+        //            v.count,
+        //            Group = MainSupplierWindowViewModel.Branches.FirstOrDefault(m => m.Code == v.supplierFrom?[..6])?.GroupName,
+        //            Text = v.count == 0 ? v.supplierFrom : $"{v.supplierFrom}-{v.supplierTo} ({v.count + 1} spaces)"
+        //        }); 
+        //        EditSupplierPage.SupplierCode = suppliers?.First().supplierFrom;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Functions.NotifyError(ex);
+        //    }
+        //}
 
     }
 }

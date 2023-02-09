@@ -11,5 +11,10 @@ namespace KFA.ItemCodes.LevenshteinDistanceAlgorithm
         public string? Code { get => groupId; set => this.RaiseAndSetIfChanged(ref groupId, value); }
         public string? BranchName { get => groupName; set => this.RaiseAndSetIfChanged(ref groupName, value); }
         public string? Prefix { get => prefix; set => this.RaiseAndSetIfChanged(ref prefix, value); }
+
+        public override string ToString()
+        {
+            return $"{Code}-{BranchName}";
+        }
     }
 }

@@ -9,14 +9,15 @@ using System.Linq;
 using AvaloniaEdit.Utils;
 using LevenshteinDistanceAlgorithm;
 using System.Collections.Generic;
+using KFA.ItemCodes.LevenshteinDistanceAlgorithm;
 
 namespace KFA.ItemCodes.Views
 {
     public partial class EditSupplierPage :Window
     {
-        internal string Supplier;
+        internal Branch Branch;
         internal static bool isUpdate = false;
-        static internal string SupplierCode, SupplierName, Branch;
+        static internal string SupplierCode, SupplierName;
 
           public EditSupplierPage()
         {
@@ -33,7 +34,7 @@ namespace KFA.ItemCodes.Views
             var txtGroup = this.FindControl<TextBlock>("TxbBranch");
             txtCode.Text = SupplierCode;
             this.FindControl<AutoCompleteBox>("TxtSupplierName").Text = SupplierName?.ToUpper();
-            this.FindControl<AutoCompleteBox>("TxtBranch").Text = Supplier?.ToUpper();
+            this.FindControl<AutoCompleteBox>("TxtBranch").Text = $"{Branch?.Code} - {Branch?.BranchName?.ToUpper()}";
             txtCode.TextChanged += (vv, yy) =>
             {
                 try
