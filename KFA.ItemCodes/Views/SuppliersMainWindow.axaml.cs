@@ -17,6 +17,8 @@ namespace KFA.ItemCodes.Views
     public partial class SupplierMainWindow : ReactiveUserControl<MainSupplierWindowViewModel>
     {
         private static SupplierMainWindow? page;
+
+        internal Action<bool?> ReloadData { get; private set; }
         public static SupplierMainWindow Page { get => page ?? new SupplierMainWindow(); }
         public SupplierMainWindow()
         {
@@ -39,7 +41,7 @@ namespace KFA.ItemCodes.Views
 
             var searchCtrl = this.FindControl<AutoCompleteBox>("TxtSearch");
             var rbNormalSearch = this.FindControl<RadioButton>("rbNormalSearch");
-            var rbAdvSearch = this.FindControl<RadioButton>("rbAdvancedSearch");
+            var rbAdvSearch = rbAdvancedSearch = this.FindControl<RadioButton>("rbAdvancedSearch");
             var dgSuppliers = this.FindControl<DataGrid>("DgSuppliers");
             var lblBranchName = this.FindControl<Label>("lblBranchName");
             var txtBranchCode = this.FindControl<AutoCompleteBox>("TxtBranchCode");
@@ -59,24 +61,23 @@ namespace KFA.ItemCodes.Views
                                 return;
 
                             if(branches == null)
-                                if (DataContext is MainSupplierWindowViewModel vm)
+                                if (MainSupplierWindowViewModel.Branches != null)
                                 {
-                                    branches = vm.Models
-                                       .Select(c => c?.Branch)
-                                       .GroupBy(c => c?.Code)
-                                       .Select(c => c.First())
+                                    branches = MainSupplierWindowViewModel.Branches
                                        .ToList();
                                 }
 
 
                             if (txt?.Length > 3)
                             {
+                                MainSupplierWindowViewModel.nextId = null;
                                 var branchCode = txt?[..4];
-                                var br = branches?.First(c => c?.Code == branchCode);
+                                var br = MainSupplierWindowViewModel.CurrentBranch = branches?.First(c => c?.Code == branchCode);
                                 if (br != null)
                                 {
                                     lblBranchName.Content = br?.BranchName;
                                     ReloadDataGrid(rbAdvancedSearch?.IsChecked ?? false);
+                                    LoadNextId(br);
                                 //    if (branches != null)
                                 //        if (DataContext is MainSupplierWindowViewModel vm)
                                 //        {
@@ -92,6 +93,11 @@ namespace KFA.ItemCodes.Views
                             }
                         }
                         catch { }
+                        try
+                        {
+                            ReloadData(rbAdvancedSearch?.IsChecked);
+                        }
+                        catch { }
                     }));
             }
 
@@ -99,12 +105,12 @@ namespace KFA.ItemCodes.Views
             {
                 try
                 {
-                    var text = searchCtrl?.Text;
-                    if (string.IsNullOrWhiteSpace(text))
-                    {
-                        dgSuppliers.Items = ViewModel?.Models;
-                        return;
-                    }
+                    var text = searchCtrl?.Text ?? "";
+                    //if (string.IsNullOrWhiteSpace(text))
+                    //{
+                    //    dgSuppliers.Items = ViewModel?.Models;
+                    //    return;
+                    //}
 
                     advancedSearch ??= rbAdvSearch?.IsChecked;
                     text = Matcher.CheckCodesName(Matcher.CheckHarmonizedName(text?.ToUpper())).name;
@@ -125,13 +131,15 @@ namespace KFA.ItemCodes.Views
                     }
 
 
-                    dgSuppliers.Items = SearchService.SearchSupplierCode(text, models, advancedSearch ?? false);
+                    dgSuppliers.Items = string.IsNullOrWhiteSpace(text) ? models : SearchService.SearchSupplierCode(text, models, advancedSearch ?? false);
                 }
                 catch (Exception ex)
                 {
                     Functions.NotifyError(ex);
                 }
             }
+
+            ReloadData = ReloadDataGrid;
             void RefreshList()
             {
                 try
@@ -161,6 +169,39 @@ namespace KFA.ItemCodes.Views
             RefreshList();
         }
 
+        private void LoadNextId(Branch? br)
+        {
+            try
+            {
+                Functions.RunOnBackground(() =>
+               {
+                   var prefix = br?.Prefix;
+                   if (prefix?.Length < 3)
+                       return;
+                   try
+                   {
+                       var sql = $@"SELECT MAX(CAST(SUBSTR(code, 4) AS UNSIGNED))+1 num FROM
+(SELECT supplier_code code FROM tbl_suppliers UNION SELECT ledger_account_code code FROM tbl_ledger_accounts) A
+WHERE code LIKE '{prefix}%' AND code NOT LIKE '{prefix}7%' AND LENGTH(code) = 6 AND code != '{prefix}499'";
+                       if (int.TryParse(SupplierDbService.GetMySqlScalar(sql)?.ToString(), out int mm) && mm > 0)
+                       {
+                           if (mm < 800 && mm > 699)
+                               mm = 800;
+                           MainSupplierWindowViewModel.nextId = $"{prefix}{mm.ToString("000")}";
+                       }
 
+                   }
+                   catch (Exception ex)
+                   {
+                       Functions.NotifyError(ex);
+                   }
+               });
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
     }
 }

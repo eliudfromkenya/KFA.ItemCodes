@@ -10,6 +10,7 @@ using AvaloniaEdit.Utils;
 using LevenshteinDistanceAlgorithm;
 using System.Collections.Generic;
 using KFA.ItemCodes.LevenshteinDistanceAlgorithm;
+using System.Reactive.Linq;
 
 namespace KFA.ItemCodes.Views
 {
@@ -18,10 +19,25 @@ namespace KFA.ItemCodes.Views
         internal Branch Branch;
         internal static bool isUpdate = false;
         static internal string SupplierCode, SupplierName;
+        public AutoCompleteBox TxtBranches { get; }
 
-          public EditSupplierPage()
+        public EditSupplierPage()
         {
             InitializeComponent();
+            TxtSupplierCode = this.FindControl<AutoCompleteBox>("TxtSupplierCode");
+            TxtSupplierName = this.FindControl<AutoCompleteBox>("TxtSupplierName");
+            TxtBranches = this.FindControl<AutoCompleteBox>("TxtBranchs");
+            TxtTelephone = this.FindControl<AutoCompleteBox>("TxtTelephone");
+            TxtEmail = this.FindControl<AutoCompleteBox>("TxtEmail");
+            TxtAddress = this.FindControl<AutoCompleteBox>("TxtAddress");
+
+            foreach (var txt in new[] {TxtSupplierCode,TxtSupplierName,TxtBranches,TxtTelephone/*TxtEmail,*//*TxtAddress*/})
+            {
+                txt.Events()
+                   .TextChanged.Throttle(TimeSpan.FromMilliseconds(300))
+                   .Subscribe(tt => Functions.RunOnMain(() => txt.Text = txt.Text?.ToUpper()));
+            }
+
             DataContext = this;
              this.FindControl<Button>("BtnSave").Command = ReactiveCommand.CreateFromTask(Save);
              this.FindControl<Button>("BtnDelete").Command  = ReactiveCommand.CreateFromTask(Delete) ;
@@ -34,7 +50,9 @@ namespace KFA.ItemCodes.Views
             var txtGroup = this.FindControl<TextBlock>("TxbBranch");
             txtCode.Text = SupplierCode;
             this.FindControl<AutoCompleteBox>("TxtSupplierName").Text = SupplierName?.ToUpper();
-            this.FindControl<AutoCompleteBox>("TxtBranch").Text = $"{Branch?.Code} - {Branch?.BranchName?.ToUpper()}";
+
+            TxtBranches = this.FindControl<AutoCompleteBox>("TxtBranchs");
+            TxtBranches.Text = $"{Branch?.Code} - {Branch?.BranchName?.ToUpper()}";
             txtCode.TextChanged += (vv, yy) =>
             {
                 try
@@ -64,9 +82,14 @@ namespace KFA.ItemCodes.Views
 
         private async Task Reset()
         {
-            this.FindControl<AutoCompleteBox>("TxtSupplierCode").Text =
-            this.FindControl<AutoCompleteBox>("TxtSupplierName").Text =
-            this.FindControl<AutoCompleteBox>("TxtBranch").Text = null;
+            TxtAddress.Text = TxtBranches.Text = TxtEmail.Text = TxtSupplierCode.Text = TxtSupplierName.Text = TxtTelephone.Text = null;
+
+            TxtSupplierCode.Text = MainSupplierWindowViewModel.nextId;
+            TxtBranches.Text = MainSupplierWindowViewModel.CurrentBranch?.ToString();
+
+            //this.FindControl<AutoCompleteBox>("TxtSupplierCode").Text =
+            //this.FindControl<AutoCompleteBox>("TxtSupplierName").Text =
+            //this.FindControl<AutoCompleteBox>("TxtBranchs").Text = null;
         }
 
         private async Task Save()
@@ -75,22 +98,66 @@ namespace KFA.ItemCodes.Views
               {
                   try
                   {
-                      var supplierCode = this.FindControl<AutoCompleteBox>("TxtSupplierCode").Text?.ToUpper();
-                      var supplierName = this.FindControl<AutoCompleteBox>("TxtSupplierName").Text?.ToUpper();
-                        var telephone = this.FindControl<AutoCompleteBox>("TxtTelephone").Text?.ToUpper();
-                        var email = this.FindControl<AutoCompleteBox>("TxtEmail").Text?.ToUpper();
-                        var address = this.FindControl<AutoCompleteBox>("TxtAddress").Text?.ToUpper();
-                      var branch = this.FindControl<AutoCompleteBox>("TxtBranch").Text?.ToUpper();
+                      var supplierCode =TxtSupplierCode.Text?.ToUpper();
+                      var supplierName = TxtSupplierName.Text?.ToUpper();
+                      var telephone  = TxtTelephone.Text?.ToUpper();
+                      var email = TxtEmail.Text?.ToUpper();
+                      var address = TxtAddress.Text?.ToUpper();
+                      var branch = TxtBranches.Text?.ToUpper();
 
-                      var supplier = MainSupplierWindowViewModel.Branches.FirstOrDefault(c => c.Code == branch?[..4]);
+                      if (string.IsNullOrWhiteSpace(supplierCode))
+                          throw new Exception("Supplier code is required please");
+                      if (string.IsNullOrWhiteSpace(supplierCode))
+                          throw new Exception("Supplier code is required please");
+
+                      if(branch?.Length < 4)
+                          throw new Exception("branch code is required please");
+
+                      var supplier = MainSupplierWindowViewModel.Branches
+                          .FirstOrDefault(c => c.Code == branch?[..4]);
+
+                      if (supplier == null)
+                          throw new Exception("Branch is not valid");
+
+                      if (!CustomValidations.IsValidSupplierCode(supplierCode))
+                          throw new Exception("Supplier code is not valid");
+                      if (!string.IsNullOrWhiteSpace(email) &&
+                         !CustomValidations.IsValidEmail(email??""))
+                          throw new Exception("email is not valid");
+                      if (!string.IsNullOrWhiteSpace(telephone) &&
+                         !CustomValidations.IsValidTelephone(telephone?.Replace("-","").Replace(" ","") ?? ""))
+                          throw new Exception("Phone number is not valid");
+                      if (!supplierCode.StartsWith(supplier?.Prefix??""))
+                          throw new Exception($"Supplier code does not belong to {supplier?.BranchName}");
+                      if (string.IsNullOrWhiteSpace(supplierName))
+                          throw new Exception("Supplier name is required please");
 
                       await SupplierDbService.SaveSupplier(supplierCode, supplierName, telephone,email,address, supplier, isUpdate);
-                      if(isUpdate)
+
+                      Functions.RunOnMain(async () =>
+                                     {
+                                         try
+                                         {
+                                            MainSupplierWindowViewModel.nextId = UpdateNextId();
+                                             await Reset();
+                                             this.Close();
+                                         }
+                                         catch (Exception)
+                                         { }
+                                     }, 500);
+                      
+
+                      if (isUpdate)
                       {
                           var supp = MainSupplierWindowViewModel.models.FirstOrDefault(c => c.Code == supplierCode);
-                          if (supplier != null)
+                          if (supp != null)
                           {
+                              supp.Code = supplierCode;
+                              supp.Name = supplierName;
                               supp.OriginalName = supplierName;
+                              supp.Telephone = telephone;
+                              supp.Email = email;
+                              supp.Address = address;
                               supp.Branch = supplier;
                           }
                           Functions.Notify($"Successfully updated supplier {supplierCode} - {SupplierName}");
@@ -114,14 +181,22 @@ namespace KFA.ItemCodes.Views
                           MainSupplierWindowViewModel.models.AddRange(suppliers);
                             Functions.Notify($"Successfully added supplier {supplierCode} - {supplierName}");
                       }
-
-                      this.Close();
+                     
                   }
                   catch (Exception ex)
                   {
                       ErrorFound(ex);
                   }
               }));
+        }
+
+        private string? UpdateNextId()
+        {
+            var nxt = MainSupplierWindowViewModel.nextId?[3..];
+            var prefix = MainSupplierWindowViewModel.nextId?[..3];
+            if (int.TryParse(nxt, out int val))
+                nxt = $"{prefix}{(++val):000}";
+            return nxt;
         }
 
         private void ErrorFound(Exception ex)

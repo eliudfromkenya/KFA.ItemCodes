@@ -7,6 +7,12 @@ public static class CustomValidations
         !string.IsNullOrWhiteSpace(code)
          && Regex.IsMatch(code, "(^[sS][a-zA-Z0-9]{2}[0-9]{3}$)|(^08[0-9]{4}$)|(^[1-9][0-9]{4}$)");
 
+    public static bool IsValidEmail(string code) =>
+        !string.IsNullOrWhiteSpace(code)
+         && Regex.IsMatch(code, "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$");
+    public static bool IsValidTelephone(string code) =>
+        !string.IsNullOrWhiteSpace(code)
+         && Regex.IsMatch(code, "(?:\\+?(\\d{1,3}))?[-. (]*(\\d{3})?[-. )]*(\\d{3})[-. ]*(\\d{4,5})(?: *x(\\d+))?");
     public static bool IsValidSupplierCode(string code) =>
         !string.IsNullOrWhiteSpace(code)
          && Regex.IsMatch(code, "^[sS][a-zA-Z0-9]{2}[0-9]{3}$");

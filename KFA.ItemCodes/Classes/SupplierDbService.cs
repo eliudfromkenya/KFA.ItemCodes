@@ -69,17 +69,17 @@ FROM
                 string sql;
                 if (!isUpdate)
                 {
-                    var duplicate = MainSupplierWindowViewModel.models.FirstOrDefault(n => (n.Code?.StartsWith(n.Branch?.Prefix??"") ?? false) && n.Name.HarmonizeName()   ==  supplierName.HarmonizeName());
+                    var duplicate = MainSupplierWindowViewModel.models.FirstOrDefault(n => (n.Code?.StartsWith(branch?.Prefix??"<>") ?? false) && n.Name.HarmonizeName()   ==  supplierName.HarmonizeName());
                     if (duplicate != null)
                     {
                         throw new Exception($"Supplier with the same name already exists: (Supplier {duplicate.Code}: {duplicate.Name})");
                     }
 
-                    duplicate = MainSupplierWindowViewModel.models.FirstOrDefault(n => (n.Code?.StartsWith(n.Branch?.Prefix??"") ?? false) && Matcher.LaveteshinDistanceAlgorithmBody(n.Name.HarmonizeName() ?? "", supplierName.HarmonizeName() ?? "") == 0);
-                    if (duplicate != null)
-                    {
-                        throw new Exception($"Supplier with the same name already exists: (Supplier {duplicate.Code}: {duplicate.Name})");
-                    }
+                    //duplicate = MainSupplierWindowViewModel.models.FirstOrDefault(n => (n.Code?.StartsWith(n.Branch?.Prefix??"") ?? false) && Matcher.LaveteshinDistanceAlgorithmBody(n.Name.HarmonizeName() ?? "", supplierName.HarmonizeName() ?? "") == 0);
+                    //if (duplicate != null)
+                    //{
+                    //    throw new Exception($"Supplier with the same name already exists: (Supplier {duplicate.Code}: {duplicate.Name})");
+                    //}
 
                     sql = @"SELECT
 	tbl_ledger_accounts.ledger_account_code, 
@@ -94,13 +94,13 @@ FROM
 
                 if (isUpdate)
                 {
-                    ExecuteMySqlNonQuery($@"UPDATE tbl_ledger_accounts SET description = @supplierName, `date_updated`={DateTime.Now:yyyyMMdd}100756977, cost_centre_code = {branch.Code} WHERE ledger_account_code = '{supplierCode}';");
+                    ExecuteMySqlNonQuery($@"UPDATE tbl_ledger_accounts SET description = @supplierName, `date_updated`='{DateTime.Now:yyyyMMdd}100756977', cost_centre_code = '{branch.Code}' WHERE ledger_account_code = '{supplierCode}';", new MySqlParameter("supplierName", supplierName));
 
-                    ExecuteMySqlNonQuery($@"UPDATE tbl_ledger_accounts SET description = @supplierName, `date_updated`={DateTime.Now:yyyyMMdd}100756977, cost_centre_code = {branch.Code} WHERE ledger_account_code = '{supplierCode}';");
+                    ExecuteMySqlNonQuery($@"UPDATE tbl_suppliers SET description = @supplierName, telephone=@telephone, email= @email, address = @address, `date_updated`={DateTime.Now:yyyyMMdd}100756977, cost_centre_code = {branch.Code} WHERE supplier_code = '{supplierCode}';", new MySqlParameter("telephone", telephone), new MySqlParameter("email", email), new MySqlParameter("address", address), new MySqlParameter("supplierName", supplierName));
                 }
                 else
                 {
-                    sql = $@"INSERT INTO `tbl_stock_suppliers`(ledger_account_id, 
+                    sql = $@"INSERT INTO `tbl_ledger_accounts`(ledger_account_id, 
     is_currently_enabled, 
 	date_added, 
 	date_updated, 
@@ -112,11 +112,11 @@ FROM
 	increase_with_debit, 
 	main_group, 
 	is_active 
-	) VALUES('{supplierCode}',1, {DateTime.Now:yyyyMMdd}100756977, {DateTime.Now:yyyyMMdd}100756977, 30000000123, 1, '{branch.Code}', @supplierName, 'Suppliers', '{supplierCode}', 1, 'Stocks Suppliers', 1);";
+	) VALUES('{supplierCode}',1, {DateTime.Now:yyyyMMdd}100756977, {DateTime.Now:yyyyMMdd}100756977, 30000000123, '{branch.Code}', @supplierName, 'Suppliers', '{supplierCode}', 1, 'Stocks Suppliers', 1);";
 
-                    ExecuteMySqlNonQuery(sql);
+                    ExecuteMySqlNonQuery(sql, new MySqlParameter("supplierName", supplierName));
 
-                    sql = $@"INSERT INTO `tbl_stock_suppliers`(supplier_id
+                    sql = $@"INSERT INTO `tbl_suppliers`(supplier_id,
 	supplier_code, 
 	telephone, 
 	address, 
@@ -126,11 +126,11 @@ FROM
 	is_currently_enabled, 
 	date_added, 
 	date_updated, 
-	originator_id, 
+	originator_id 
 	) VALUES('{supplierCode}','{supplierCode}','{telephone}',@address, '{email}','{branch.Code}', @supplierName, 1, {DateTime.Now:yyyyMMdd}100756977, {DateTime.Now:yyyyMMdd}100756977, 30000000123);";
 
-                    ExecuteMySqlNonQuery(sql);
-                }
+                    ExecuteMySqlNonQuery(sql, new MySqlParameter("address", address), new MySqlParameter("supplierName", supplierName));
+                }               
 
             }
             catch (Exception ex)

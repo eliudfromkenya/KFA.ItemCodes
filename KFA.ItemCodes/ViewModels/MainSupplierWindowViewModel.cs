@@ -9,6 +9,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Subjects;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -22,6 +23,7 @@ namespace KFA.ItemCodes.ViewModels
         private string message;
         private string errorMessage;
         internal static ObservableCollection<Branch> itemGroups;
+        internal static string nextId = null;
 
         public string? Message { get => message; set => this.RaiseAndSetIfChanged(ref message, value); }
         public string? ErrorMessage { get => errorMessage; set => this.RaiseAndSetIfChanged(ref errorMessage, value); }
@@ -36,9 +38,10 @@ namespace KFA.ItemCodes.ViewModels
 
         public static BehaviorSubject<(string? title, string? message)> Notifications { get; set; } = new((null, null));
 
-        public SupplierCode SelectedItem { get => selectedItem; set => this.RaiseAndSetIfChanged(ref selectedItem, value); }
+        public SupplierCode SelectedSupplier { get => selectedItem; set => this.RaiseAndSetIfChanged(ref selectedItem, value); }
         public ObservableCollection<SupplierCode> Models { get => models; set => this.RaiseAndSetIfChanged(ref models, value); }
         public static ObservableCollection<Branch> Branches { get => itemGroups; set => itemGroups = value; }
+        public static Branch? CurrentBranch { get; internal set; }
 
         public MainSupplierWindowViewModel()
         {
@@ -128,7 +131,7 @@ namespace KFA.ItemCodes.ViewModels
             {
                 var page = new SearchSuppliersPage
                 {
-                    SearchBasedSupplierCode = SelectedItem?.Code,
+                    SearchBasedSupplierCode = SelectedSupplier?.Code,
                     SearchBasedName = MainWindow.FindControl<AutoCompleteBox>("TxtSearch")?.Text,
                     SupplierCodes = Models?.ToList() ?? new(),
                     WindowState = WindowState.Maximized
@@ -145,18 +148,29 @@ namespace KFA.ItemCodes.ViewModels
           {
               try
               {
-                  if (SelectedItem == null)
+                  if (SelectedSupplier == null)
                       throw new Exception("Please select the item to update");
 
-                  EditSupplierPage.SupplierCode = SelectedItem?.Code;
-                  EditSupplierPage.SupplierName = SelectedItem?.OriginalName;
+                  EditSupplierPage.SupplierCode = SelectedSupplier?.Code;
+                  EditSupplierPage.SupplierName = SelectedSupplier?.OriginalName;
                   EditSupplierPage.isUpdate = true;
+
 
                   var page = new EditSupplierPage
                   {
                       WindowState = WindowState.Maximized,
-                      Branch = SelectedItem?.Branch
+                      Branch = SelectedSupplier?.Branch
                   };
+
+                  if(SelectedSupplier != null)
+                  {
+                      page.TxtAddress.Text = SelectedSupplier.Address;
+                      page.TxtBranches.Text = SelectedSupplier.Branch?.ToString();
+                      page.TxtEmail.Text = SelectedSupplier.Email;
+                      page.TxtSupplierCode.Text = SelectedSupplier.Code;
+                      page.TxtSupplierName.Text = SelectedSupplier.Name;
+                      page.TxtTelephone.Text = SelectedSupplier.Telephone;
+                  }
                   page.FindControl<AutoCompleteBox>("TxtSupplierCode").IsEnabled = false;
                   page.Show();
                   page.WindowState = WindowState.Maximized;
@@ -183,8 +197,54 @@ namespace KFA.ItemCodes.ViewModels
                          WindowState = WindowState.Maximized
                      };
 
-                     page.Show();
+                     page.Show();                    
+
+                     page.TxtSupplierName.Text = EditSupplierPage.SupplierName;
+                     
                      page.WindowState = WindowState.Maximized;
+
+                     Functions.RunOnBackground(() =>
+                     {
+                         for (int i = 0; i < 30; i++)
+                         {
+                             var nxt = MainSupplierWindowViewModel.nextId??"";
+                             if(nxt.Length > 3)
+                             {
+                                   Functions.RunOnMain(() =>
+                                   {
+                                       try
+                                       {
+                                           page.TxtSupplierCode.Text = nxt;
+                                           var branch = MainSupplierWindowViewModel.CurrentBranch;
+                                           if (branch != null)
+                                           {
+                                               page.TxtBranches.Text = branch.ToString();
+                                           }
+                                           else
+                                           {
+                                               page.TxtBranches.Text = $"{MainWindow.FindControl<AutoCompleteBox>("TxtBranchCode")?.Text} - {MainWindow.FindControl<Label>("lblBranchName")?.Content}";
+                                           }
+                                       }
+                                       catch { }
+                                   });
+                                 break;
+                             }
+                             Thread.Sleep(TimeSpan.FromSeconds(1));
+                         }
+                         //var prefix = "S5A";
+//                         try
+//                         {
+//                             var sql = $@"SELECT MAX(CAST(SUBSTR(code, 4) AS UNSIGNED))+1 num FROM
+//(SELECT supplier_code code FROM tbl_suppliers UNION SELECT ledger_account_code code FROM tbl_ledger_accounts) A
+//WHERE code LIKE '{prefix}%' AND code NOT LIKE '{prefix}7%' AND code != '{prefix}499'";
+//                             if (int.TryParse(SupplierDbService.GetMySqlScalar(sql)?.ToString(), out int mm) && mm > 0)
+//                                 Functions.RunOnMain(() => page.TxtSupplierCode.Text = $"{prefix}{mm:000}");
+//                         }
+//                         catch (Exception ex)
+//                         {
+//                             Functions.NotifyError(ex);
+//                         }
+                     });
                      //page.Topmost = true;
                  }
                  catch (Exception ex)
@@ -205,10 +265,24 @@ namespace KFA.ItemCodes.ViewModels
                     var allBranches = new ObservableCollection<Branch>(branches);
                     Functions.RunOnMain(() =>
                     {
-                        Models = models;
-                        Branches = allBranches;
-                        if (MainWindow.FindControl<AutoCompleteBox>("TxtBranchCode") is AutoCompleteBox auto)
-                            auto.Items = allBranches.Select(x => $"{x.Code}-{x.BranchName}").ToList();
+                        try
+                        {
+                            Models = models;
+                            Branches = allBranches;
+                            if (MainWindow.FindControl<AutoCompleteBox>("TxtBranchCode") is AutoCompleteBox auto)
+                            {
+                                auto.Items = allBranches.Select(x => $"{x.Code}-{x.BranchName}").ToList();
+                                var txt = auto.Text;
+                                auto.Text = null;
+                                auto.Text = txt;
+                            }
+                        }
+                        catch { }
+                        try
+                        {
+                            MainWindow.ReloadData(MainWindow.rbAdvancedSearch.IsChecked);
+                        }
+                        catch { }
                     });
                 }
                 catch (Exception ex)
