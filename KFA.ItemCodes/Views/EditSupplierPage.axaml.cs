@@ -195,7 +195,15 @@ namespace KFA.ItemCodes.Views
             var nxt = MainSupplierWindowViewModel.nextId?[3..];
             var prefix = MainSupplierWindowViewModel.nextId?[..3];
             if (int.TryParse(nxt, out int val))
+            {
                 nxt = $"{prefix}{(++val):000}";
+                if(val > 699 && val < 800)
+                {
+                     nxt = $"{prefix}{800}";
+                }
+               else if (val == 499)
+                    nxt = $"{prefix}{500}";
+            }
             return nxt;
         }
 

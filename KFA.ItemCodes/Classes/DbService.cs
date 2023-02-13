@@ -77,11 +77,11 @@ FROM
                         throw new Exception($"Item with the same name already exists: (Item {duplicate.Code}: {duplicate.Name})");
                     }
 
-                    duplicate = MainItemsWindowViewModel.models.FirstOrDefault(n => Matcher.LaveteshinDistanceAlgorithmBody(n.HarmonizedName ?? "", name.harmonizedName ?? "") == 0);
-                    if (duplicate != null)
-                    {
-                        throw new Exception($"Item with the same name already exists: (Item {duplicate.Code}: {duplicate.Name})");
-                    }
+                    //duplicate = MainItemsWindowViewModel.models.FirstOrDefault(n => Matcher.LaveteshinDistanceAlgorithmBody(n.HarmonizedName ?? "", name.harmonizedName ?? "") == 0);
+                    //if (duplicate != null)
+                    //{
+                    //    throw new Exception($"Item with the same name already exists: (Item {duplicate.Code}: {duplicate.Name})");
+                    //}
 
                     sql = @"SELECT item_code FROM tbl_stock_items WHERE item_name = @itemName";
                     var duplicateItem = GetMySqlScalar(sql, new MySqlParameter("@itemName", itemName))?.ToString();
