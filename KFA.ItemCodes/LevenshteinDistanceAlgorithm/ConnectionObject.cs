@@ -18,7 +18,7 @@ public class ConnectionObject
     //public IBM.Data.DB2.Core.DB2Connection ZanasConnection => new IBM.Data.DB2.Core.DB2Connection($"Server={ZanasDbModel.Host}:{ZanasDbModel.Port};Database={ZanasDbModel.Database};UID={ZanasDbModel.User};PWD={ZanasDbModel.Password};");
 
 
-    private DBModel mySQLSubServerDbModel = new() { Database = "kfa_sub_systems", Host = "192.168.1.240", Password = "*654321.0kfa#", Port = "50000", Schema = "KFALTD", User = "remote_user" };
+    private DBModel mySQLSubServerDbModel = new() { Database = "kfa_sub_systems", Host = "192.168.1.239", Password = "isd@KFA2023#", Port = "3306", Schema = "KFALTD", User = "remoteuser" };
     private DBModel mySQLDbModel = new() { Database = "kfa_sub_systems", Host = "127.0.0.1", Password = "654321", Port = "3306", Schema = "ZANAS", User = "root" };
    
      public DBModel MySQLSubServerDbModel { get => mySQLSubServerDbModel; set => mySQLSubServerDbModel = value; }
