@@ -9,9 +9,12 @@
   </PropertyGroup>
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
+    <AvaloniaXaml Remove="KFA.ItemCodes\**" />
     <AvaloniaXaml Remove="Models\**" />
     <Compile Remove="Models\**" />
+    <EmbeddedResource Remove="KFA.ItemCodes\**" />
     <EmbeddedResource Remove="Models\**" />
+    <None Remove="KFA.ItemCodes\**" />
     <None Remove="Models\**" />
     <None Remove=".gitignore" />
     <None Remove="Skins\AutoCompleteBox.xaml" />
