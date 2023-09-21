@@ -19,14 +19,14 @@ namespace KFA.ItemCodes.Views
 
 		private async Task Login()
 		{
-			await Task.Run(() => Functions.RunOnMain(async () =>
+			await Task.Run(() => Functions.RunOnMain(() =>
 			  {
 				  try
 				  {
 					  var username = TxtUsername.Text?.ToLower();
 					  var password = TxtPassword.Text;
 
-					  if(await DbService.Login(username, password))
+					  if(DbService.Login(username, password))
 					  {
 						  Functions.Notify($"Successfully logged in");
 						  App.MainWindow.Show();

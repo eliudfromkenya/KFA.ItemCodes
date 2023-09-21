@@ -17,6 +17,7 @@ namespace KFA.ItemCodes.Views
         public MainWindow()
         {
             InitializeComponent();
+            this.Closing += (cc, tt) => DbService.Logout();
         }
 
 		public static bool CanUpdateData { get; internal set; }

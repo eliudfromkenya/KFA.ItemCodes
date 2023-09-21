@@ -328,8 +328,23 @@ where LENGTH(group_id) = 2;";
 			return cmd.ExecuteNonQuery();
 		}
 
+		internal static bool Logout()
+		{
+			try
+			{
+				var sql = $@"SET @date = now();
+SET @timeStamp = 20230905101319480;
+SET @loginId = '{LoginId}';
+
+UPDATE tbl_user_logins SET date_updated=@timeStamp, upto_date = @date  WHERE login_id LIKE @loginId;";
+
+				ExecuteMySqlNonQuery(sql);
+			}
+			catch { }
+			return false;
+		}
 		static string? LoginId = null;
-		internal static async Task<bool> Login(string? username, string password)
+		internal static bool Login(string? username, string password)
 		{
 			using var ds = GetMySqlDataSet(@"SELECT
 	tbl_system_users.user_id,
@@ -352,7 +367,16 @@ FROM
 					IsActive = (bool?)row["is_active"]
 				}).Where(m => m.Username?.ToLower() == username?.ToLower()).ToArray();
 
-			var sql = @"SET @prefix = 'KU-OG5B-000005';
+			
+
+
+
+			var users = data.Where(c => VerifyPasswordHash(password, c.PasswordHash, c.PasswordSalt));
+
+			try
+			{
+				var userId = users.First().Id;
+				var sql = $@"SET @prefix = '{userId}';
 
 SELECT EXISTS (
 SELECT
@@ -372,17 +396,15 @@ FROM
 	(tbl_user_roles.role_name LIKE '%manager%'
 	OR tbl_user_roles.role_name LIKE '%admin%'))";
 
-			MainWindow.CanUpdateData = GetMySqlScalar(sql)?.ToString() == "1";
-
-
-
-			var users = data.Where(c => VerifyPasswordHash(password, c.PasswordHash, c.PasswordSalt));
+				MainWindow.CanUpdateData = GetMySqlScalar(sql)?.ToString() == "1";
+			}
+			catch { }
 
 			try
 			{
 				var narration = $"Computer: {Environment.MachineName}(User: {Environment.UserName})";
 				var userId = users.First().Id;
-				sql = $@"SET @prefix = (SELECT MAX(CAST(`code` AS UNSIGNED)) FROM (SELECT SUBSTR(login_id,6) `code` FROM tbl_user_logins WHERE login_id LIKE 'CODE-%') A);
+				var sql = $@"SET @prefix = (SELECT MAX(CAST(`code` AS UNSIGNED)) FROM (SELECT SUBSTR(login_id,6) `code` FROM tbl_user_logins WHERE login_id LIKE 'CODE-%') A);
 -- SET @prefix = (SELECT MAX CAST( AS UNSIGNED);
 SET @id =  CONCAT('CODE-',LPAD(IFNULL(@prefix, 0)+1, 2,'0'));
 SET @date = now();
@@ -397,13 +419,13 @@ SELECT @id;";
 
 				LoginId = GetMySqlScalar(sql)?.ToString();
 
-				Logout code then on update record login id
+				// Logout code then on update record login id
 			}
 			catch { }
 
 			if (users.Any())
 			{
-				DbService.user = users.First().Name;
+				DbService.user = $"{users.First().Name}[ Login Id: {LoginId} ]";
 				return true;
 			}
 			return false;

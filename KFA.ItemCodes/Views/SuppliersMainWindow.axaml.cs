@@ -39,7 +39,9 @@ namespace KFA.ItemCodes.Views
                    Environment.Exit(0);
                }).DisposeWith(disposable);
 
-            var searchCtrl = this.FindControl<AutoCompleteBox>("TxtSearch");
+			ViewModel.CanUpdate = Views.MainWindow.CanUpdateData;
+
+			var searchCtrl = this.FindControl<AutoCompleteBox>("TxtSearch");
             var rbNormalSearch = this.FindControl<RadioButton>("rbNormalSearch");
             var rbAdvSearch = rbAdvancedSearch = this.FindControl<RadioButton>("rbAdvancedSearch");
             var dgSuppliers = this.FindControl<DataGrid>("DgSuppliers");
