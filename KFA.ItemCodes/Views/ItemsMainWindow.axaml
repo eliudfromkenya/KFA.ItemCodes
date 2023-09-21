@@ -66,19 +66,19 @@
           <WrapPanel VerticalAlignment="Stretch">
             <Button Grid.Column="1" x:Name="RefreshButton" Command="{Binding RefreshDataCommand}"  Margin="10, 3" MinWidth="70" Content="Refresh Item Codes" HorizontalAlignment="Right" />
             
-            <Button Grid.Column="1" x:Name="AddItemButton" IsVisible="False" Command="{Binding AddItemCommand}"  Margin="10, 3" MinWidth="70" Content="Add Item Code" HorizontalAlignment="Right" />
+            <Button Grid.Column="1" IsVisible="{Binding CanUpdate}" x:Name="AddItemButton"  Command="{Binding AddItemCommand}"  Margin="10, 3" MinWidth="70" Content="Add Item Code" HorizontalAlignment="Right" />
             
-            <Button Grid.Column="2" Margin="10, 3" MinWidth="70" IsVisible="False" Command="{Binding UpdateItemCommand}" Content="Update Item Code" HorizontalAlignment="Center" x:Name="UpdateItemButton" />
+            <Button Grid.Column="2" IsVisible="{Binding CanUpdate}" Margin="10, 3" MinWidth="70"  Command="{Binding UpdateItemCommand}" Content="Update Item Code" HorizontalAlignment="Center" x:Name="UpdateItemButton" />
 
-            <Button Grid.Column="2" Margin="10, 3" MinWidth="70" IsVisible="False" Command="{Binding SearchItemCodeCommand}" Content="Search New Item Code" HorizontalAlignment="Center" x:Name="SearchItemCodeButton" />
+            <Button Grid.Column="2" IsVisible="{Binding CanUpdate}" Margin="10, 3" MinWidth="70"  Command="{Binding SearchItemCodeCommand}" Content="Search New Item Code" HorizontalAlignment="Center" x:Name="SearchItemCodeButton" />
 
-            <Button Grid.Column="3" IsVisible="False" Command="{Binding AddItemCommand}" Margin="10, 3" MinWidth="70" Content="Database Settings" HorizontalAlignment="Left" x:Name="DatabaseSettingsButton" IsCancel="True" />
+            <Button Grid.Column="3" IsVisible="{Binding CanUpdate}" Command="{Binding AddItemCommand}" Margin="10, 3" MinWidth="70" Content="Database Settings" HorizontalAlignment="Left" x:Name="DatabaseSettingsButton" IsCancel="True" />
           </WrapPanel>
         </Border>
         
         <Button Grid.Column="2" Margin="40, 3" MinWidth="70" Command="{Binding LoadSuppliersCommand}" Content="Load Supplier Codes" HorizontalAlignment="Center" x:Name="LoadSuppliersCodeButton" />
 
-        <Button IsVisible="False"  Grid.Column="1" x:Name="MoreButton" Command="{Binding MoreCommand}" Margin="3" MinWidth="70" Content="More..." HorizontalAlignment="Right" />
+        <Button  Grid.Column="1" x:Name="MoreButton" Command="{Binding MoreCommand}" Margin="3" IsVisible="False" MinWidth="70" Content="More..." HorizontalAlignment="Right" />
 
         <Button Grid.Column="3" Margin="10, 3" MinWidth="70" Content="Close" HorizontalAlignment="Left" x:Name="CloseButton" IsCancel="True" />
       </WrapPanel>

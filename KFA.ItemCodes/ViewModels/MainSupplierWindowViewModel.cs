@@ -28,6 +28,8 @@ namespace KFA.ItemCodes.ViewModels
         public string? Message { get => message; set => this.RaiseAndSetIfChanged(ref message, value); }
         public string? ErrorMessage { get => errorMessage; set => this.RaiseAndSetIfChanged(ref errorMessage, value); }
 
+        public bool CanUpdate => KFA.ItemCodes.Views.MainWindow.CanUpdateData;
+
         public ICommand RefreshDataCommand { get; }
         public ICommand LoadStockItemsCommand { get; }
         public ICommand AddSupplierCommand { get; }

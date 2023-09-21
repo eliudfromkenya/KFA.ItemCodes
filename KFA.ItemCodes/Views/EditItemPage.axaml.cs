@@ -74,7 +74,10 @@ namespace KFA.ItemCodes.Views
               {
                   try
                   {
-                      var itemCode = this.FindControl<AutoCompleteBox>("TxtItemCode").Text?.ToUpper();
+					  if (Views.MainWindow.CanUpdateData)
+						  throw new Exception("You are not allowed to update item codes\r\nPlease contact system admin");
+
+					  var itemCode = this.FindControl<AutoCompleteBox>("TxtItemCode").Text?.ToUpper();
                       var itemName = this.FindControl<AutoCompleteBox>("TxtItemName").Text?.ToUpper();
                       var supplier = this.FindControl<AutoCompleteBox>("TxtItemSupplier").Text?.ToUpper();
 

@@ -1,157 +1,158 @@
-﻿using KFA.ItemCodes.LevenshteinDistanceAlgorithm;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Threading.Tasks;
+using KFA.ItemCodes.LevenshteinDistanceAlgorithm;
 using KFA.ItemCodes.ViewModels;
 using KFA.ItemCodes.Views;
 using LevenshteinDistanceAlgorithm;
 using MySqlConnector;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KFA.ItemCodes.Classes
 {
-    internal static class DbService
-    {
-        // internal static List<LevenshteinDistanceAlgorithm.ItemCode> AllItemCodes; 
-        public static string? user = null;
+	internal static class DbService
+	{
+		// internal static List<LevenshteinDistanceAlgorithm.ItemCode> AllItemCodes;
+		public static string? user = null;
 
-        private static string GetUserName()
-        {
-            var sql = $@"DROP TABLE IF EXISTS deviceNames;
-CREATE TEMPORARY TABLE deviceNames AS 
+		private static string GetUserName()
+		{
+			var sql = $@"DROP TABLE IF EXISTS deviceNames;
+CREATE TEMPORARY TABLE deviceNames AS
 SELECT DISTINCT device_name, device_code FROM tbl_data_devices;
 
 -- SELECT (SELECT login_id FROM tbl_user_logins WHERE deviceNames.device_code = tbl_user_logins.device_id ORDER BY tbl_user_logins.from_date DESC LIMIT 1) FROM deviceNames;
 
 DROP TABLE IF EXISTS XUserLogins;
-CREATE TEMPORARY TABLE XUserLogins AS 
+CREATE TEMPORARY TABLE XUserLogins AS
 SELECT (SELECT login_id FROM tbl_user_logins WHERE deviceNames.device_code = tbl_user_logins.device_id ORDER BY tbl_user_logins.from_date DESC LIMIT 1) login_id FROM deviceNames;
 
 SELECT
 	tbl_system_users.name_of_the_user
-	-- tbl_system_users.username, 
-	-- tbl_data_devices.device_number, 
-	-- tbl_data_devices.device_name, 
-	-- tbl_data_devices.device_code, 
+	-- tbl_system_users.username,
+	-- tbl_data_devices.device_number,
+	-- tbl_data_devices.device_name,
+	-- tbl_data_devices.device_code,
 	-- tbl_data_devices.device_caption
 FROM
 	tbl_data_devices
 	INNER JOIN
 	tbl_user_logins
-	ON 
+	ON
 		tbl_data_devices.device_id = tbl_user_logins.device_id
 	INNER JOIN
 	tbl_system_users
-	ON 
+	ON
 		tbl_user_logins.user_id = tbl_system_users.user_id
 	WHERE tbl_user_logins.login_id In (SELECT login_id FROM XUserLogins)
 	AND device_name  = '{Environment.MachineName}';
 	";
-            var name = GetMySqlScalar(sql)?.ToString();
-            if (string.IsNullOrWhiteSpace(name))
-                name = Environment.MachineName;
+			var name = GetMySqlScalar(sql)?.ToString();
+			if (string.IsNullOrWhiteSpace(name))
+				name = Environment.MachineName;
 
-            return name;
-        }
-        public static async Task SaveItem(string itemCode,string itemName, string supplier, bool isUpdate)
-        {
-            try
-            {
-                if (!CustomValidations.IsValidItemCode(itemCode))
-                    throw new Exception("Invalid item code");
-                if (string.IsNullOrWhiteSpace(itemName))
-                    throw new Exception("Item name is required please");
+			return name;
+		}
 
-                var name = Matcher.CheckCodesName(Matcher.CheckHarmonizedName(itemName?.ToUpper()));
+		public static async Task SaveItem(string itemCode, string itemName, string supplier, bool isUpdate)
+		{
+			try
+			{
+				if (Views.MainWindow.CanUpdateData)
+					throw new Exception("You are not allowed to update item codes\r\nPlease contact system admin");
 
-                user ??= GetUserName();
+				if (!CustomValidations.IsValidItemCode(itemCode))
+					throw new Exception("Invalid item code");
+				if (string.IsNullOrWhiteSpace(itemName))
+					throw new Exception("Item name is required please");
 
-                string sql;
-                if (!isUpdate)
-                {
-                    var duplicate = MainItemsWindowViewModel.models.FirstOrDefault(n => n.HarmonizedName ==  name.harmonizedName);
-                    if (duplicate != null)
-                    {
-                        throw new Exception($"Item with the same name already exists: (Item {duplicate.Code}: {duplicate.Name})");
-                    }
+				var name = Matcher.CheckCodesName(Matcher.CheckHarmonizedName(itemName?.ToUpper()));
 
-                    //duplicate = MainItemsWindowViewModel.models.FirstOrDefault(n => Matcher.LaveteshinDistanceAlgorithmBody(n.HarmonizedName ?? "", name.harmonizedName ?? "") == 0);
-                    //if (duplicate != null)
-                    //{
-                    //    throw new Exception($"Item with the same name already exists: (Item {duplicate.Code}: {duplicate.Name})");
-                    //}
+				user ??= GetUserName();
 
-                    sql = @"SELECT item_code FROM tbl_stock_items WHERE item_name = @itemName";
-                    var duplicateItem = GetMySqlScalar(sql, new MySqlParameter("@itemName", itemName))?.ToString();
-                    if (!string.IsNullOrWhiteSpace(duplicateItem))
-                        throw new Exception($"Item with the same name already exists: (Item Code {duplicateItem})");
-                }
-                
-                if (isUpdate)
-                {
-                    try
-                    {
-                       // sql = $"SELECT ITEM_CODE FROM ITEM_MASTER WHERE ITEM_CODE = '{itemCode}' AND BUY_PRICE > 0";
-                       //if (GetDb2Scalar(sql)?.ToString() == itemCode)
-                       //     throw new AccessViolationException("Can not update the record because it currently contains stocks in branch POS(es)");
-                    }
-                    catch (AccessViolationException)
-                    {
-                       // throw;
-                    }
-                    catch (Exception) { }
+				string sql;
+				if (!isUpdate)
+				{
+					var duplicate = MainItemsWindowViewModel.models.FirstOrDefault(n => n.HarmonizedName == name.harmonizedName);
+					if (duplicate != null)
+					{
+						throw new Exception($"Item with the same name already exists: (Item {duplicate.Code}: {duplicate.Name})");
+					}
 
-                    sql = $"UPDATE `tbl_stock_items` SET `item_name`= '{itemName?.Replace("'", "''")}',`date_updated`={DateTime.Now:yyyyMMdd}100756977, barcode = '{user?.Replace("'", "''")}', `distributor` = {(string.IsNullOrWhiteSpace(supplier) ? "NULL" : $"'{supplier.Replace("'", "''")}'")} WHERE `item_code` = '{itemCode}'";
-                }
-                else
-                    sql = $"INSERT INTO `tbl_stock_items`(barcode, `date_added`, `date_updated`, `originator_id`, `is_currently_enabled`, `item_code`, `distributor`, `group_id`, `item_name`, `is_active`) VALUES ('{user?.Replace("'", "''")}', {DateTime.Now:yyyyMMdd}100756977, {DateTime.Now:yyyyMMdd}100756977, 30000000123, 1, '{itemCode}', {(string.IsNullOrWhiteSpace(supplier) ? "NULL" : $"'{supplier.Replace("'", "''")}'")},'{itemCode[..2]}', '{itemName?.Replace("'", "''")}', 1);";
+					//duplicate = MainItemsWindowViewModel.models.FirstOrDefault(n => Matcher.LaveteshinDistanceAlgorithmBody(n.HarmonizedName ?? "", name.harmonizedName ?? "") == 0);
+					//if (duplicate != null)
+					//{
+					//    throw new Exception($"Item with the same name already exists: (Item {duplicate.Code}: {duplicate.Name})");
+					//}
 
-                try
-                {
-                    ExecuteMySqlNonQuery(sql);
-                }
-                catch (Exception)
-                {
-                    sql = $"SELECT item_code FROM tbl_stock_items WHERE LENGTH(TRIM(item_name)) < 1 AND item_code = '{itemCode}';";
-                    if (!isUpdate && GetMySqlScalar(sql)?.ToString() == itemCode)
-                    {
-                        sql = $"UPDATE `tbl_stock_items` SET `item_name`= '{itemName?.Replace("'", "''")}',`date_updated`={DateTime.Now:yyyyMMdd}100756977, barcode = '{user?.Replace("'", "''")} - was empty item name', `distributor` = {(string.IsNullOrWhiteSpace(supplier) ? "NULL" : $"'{supplier.Replace("'", "''")}'")} WHERE `item_code` = '{itemCode}'";
-                        ExecuteMySqlNonQuery(sql);
-                    }
-                    else throw;
-                }
+					sql = @"SELECT item_code FROM tbl_stock_items WHERE item_name = @itemName";
+					var duplicateItem = GetMySqlScalar(sql, new MySqlParameter("@itemName", itemName))?.ToString();
+					if (!string.IsNullOrWhiteSpace(duplicateItem))
+						throw new Exception($"Item with the same name already exists: (Item Code {duplicateItem})");
+				}
 
+				if (isUpdate)
+				{
+					try
+					{
+						// sql = $"SELECT ITEM_CODE FROM ITEM_MASTER WHERE ITEM_CODE = '{itemCode}' AND BUY_PRICE > 0";
+						//if (GetDb2Scalar(sql)?.ToString() == itemCode)
+						//     throw new AccessViolationException("Can not update the record because it currently contains stocks in branch POS(es)");
+					}
+					catch (AccessViolationException)
+					{
+						// throw;
+					}
+					catch (Exception) { }
 
-                sql = @"INSERT INTO item_master(ITEM_CODE, ITEM_TYPE, ITEM_NAME, BARCODE, ITEM_GROUP, SUB_GROUP, PACK_TYPE, IUOM, SUOM, PUOM, WUOM, ITEM_ACCOUNT, SUPPLIER, MANUFACTURER, BUY_PRICE, PROFIT_MARGIN, SALE_PRICE, WHOLE_PRICE, STOCK_PRICE, DISCOUNT_RATE, TAXABLE, TAX_RATE, TAX_GROUP, PRICE_GROUP, DESCRIPTION, LEVY_RATE1, LEVY_RATE2, MAX_STOCK, REORDER_LEVEL, CONVERSION, P_CONVERSION, S_CONVERSION, W_CONVERSION, SHELF_LIFE, ON_PROMOTION, PARENT_ITEM, ITEM_STATUS, BARCODE_TYPE, CATEGORY1, CATEGORY2, OPTION1, OPTION2, PACKAGE, UNIT_MEASURE, MEASURE_TYPE, BASE_MEASURE, PART_NUMBER, OEM_NUMBER, DEBIT_CHECK, DATA_OPTION, STOCK_PARENT, STOCK_RULE, STOCK_CODE, STOCK_CODE1, STOCK_CODE2, STOCK_CODE3, CHECK_OPTION1, CHECK_OPTION2, CHECK_OPTION3, CHECK_OPTION4, VALUE_OPTION1, VALUE_OPTION2, VALUE_OPTION3, VALUE_OPTION4, VALUE_RATE1, VALUE_RATE2, START_DATE, EXPIRE_DATE, VALUE_DATE, PROMOTION_TYPE, CHECK_CATEGORY, CONFIGURATION, DATE_CREATED, CREATED_BY, DATE_MODIFIED, MODIFIED_BY, EXPORT_INDICATOR, DATE_EXPORTED, EXPORTED_BY, PURCHASE_ACCOUNT, INVENTORY_ACCOUNT, CASH_ACCOUNT, BARCODE1, BARCODE2, BARCODE_TYPE1, BARCODE_TYPE2, SYNC_STATUS, TRADE_PRICE, TRADE_PRICE_TRIGGER, HAS_LEVIES, USE_DEFAULT_LOCATION, DEFAULT_LOCATION, DEFAULT_PACK, SALES_ACCOUNT, COS_ACCOUNT, GAIN_ACCOUNT, SALEABLE, PURCHASEABLE, PRODUCED, CONVERSION_OPTION, HAS_HEADERS, ITEM_CLASS, ECOMMERCE_SHOW, APPLIED_MODELS, APPLIED_ENGINES, ALTERNATE_PART_NUMBERS, BVP_PART_NUMBERS, TPROFIT_MARGIN, WPROFIT_MARGIN, SPROFIT_MARGIN) VALUES ('020028', 'STK', 'LARGE BAGS', NULL, 'S/H', 'GEN', 'EAC', 'EAC', 'EAC', 'EAC', 'EAC', '600100', NULL, NULL, 0.00, 0.000000, 0.00, 0.00, 0.00, 0.000, 'N', 16.000, 'NON', NULL, NULL, 0.000, 0.000, 0.000, 0.000, 1.00000000, 1.00000000, 1.00000000, 0.00, 0.00, 'N', NULL, 'ACT', 'EAN', NULL, NULL, 'N', 'N', NULL, 0.000, 'KG', 0.00000000, NULL, NULL, 'N', 'N', 'N', '*', NULL, NULL, NULL, NULL, 'N', 'N', 'N', 'N', 0.00, 0.00, 0.00, 0.00, 0.00000000, 0.00000000, NULL, NULL, NULL, '*', '*', 'CONFIGURATION', '2022-07-23 12:44:41', NULL, '2022-07-28 15:46:57', NULL, 'N', NULL, NULL, '710100', '220100', NULL, NULL, NULL, NULL, NULL, 'ADD', 0.00, 0.00, 'N', 'N', 'NON', 'EAC', '600100', '700100', '220300', 'Y', 'Y', 'N', 'A', 'N', 'NRM', NULL, NULL, NULL, NULL, NULL, 0.000000, 0.000000, 0.000000);";
+					sql = $"UPDATE `tbl_stock_items` SET `item_name`= '{itemName?.Replace("'", "''")}',`date_updated`={DateTime.Now:yyyyMMdd}100756977, barcode = '{user?.Replace("'", "''")}', `distributor` = {(string.IsNullOrWhiteSpace(supplier) ? "NULL" : $"'{supplier.Replace("'", "''")}'")} WHERE `item_code` = '{itemCode}'";
+				}
+				else
+					sql = $"INSERT INTO `tbl_stock_items`(barcode, `date_added`, `date_updated`, `originator_id`, `is_currently_enabled`, `item_code`, `distributor`, `group_id`, `item_name`, `is_active`) VALUES ('{user?.Replace("'", "''")}', {DateTime.Now:yyyyMMdd}100756977, {DateTime.Now:yyyyMMdd}100756977, 30000000123, 1, '{itemCode}', {(string.IsNullOrWhiteSpace(supplier) ? "NULL" : $"'{supplier.Replace("'", "''")}'")},'{itemCode[..2]}', '{itemName?.Replace("'", "''")}', 1);";
 
-            }
-            catch (Exception ex)
-            {
-                Functions.NotifyError(ex);
-                throw;
-            }
-        }
-        internal static  
-            (List<ItemCode> items, List<ItemGroup> groups) RefreshMySQLItems()
-        {
-            MySqlConnection? con = null;
-            try
-            {
-                con = new ConnectionObject().MySQLSubServerConnection;
-                try
-                {
-                    con.Open();
-                }
-                catch (Exception)
-                {
-                    con = new ConnectionObject().MySQLDbConnection;
-                }
+				try
+				{
+					ExecuteMySqlNonQuery(sql);
+				}
+				catch (Exception)
+				{
+					sql = $"SELECT item_code FROM tbl_stock_items WHERE LENGTH(TRIM(item_name)) < 1 AND item_code = '{itemCode}';";
+					if (!isUpdate && GetMySqlScalar(sql)?.ToString() == itemCode)
+					{
+						sql = $"UPDATE `tbl_stock_items` SET `item_name`= '{itemName?.Replace("'", "''")}',`date_updated`={DateTime.Now:yyyyMMdd}100756977, barcode = '{user?.Replace("'", "''")} - was empty item name', `distributor` = {(string.IsNullOrWhiteSpace(supplier) ? "NULL" : $"'{supplier.Replace("'", "''")}'")} WHERE `item_code` = '{itemCode}'";
+						ExecuteMySqlNonQuery(sql);
+					}
+					else throw;
+				}
 
-                var sql = @"SELECT
-	tbl_stock_items.item_code, 
-	tbl_stock_items.item_name, 
+				sql = @"INSERT INTO item_master(ITEM_CODE, ITEM_TYPE, ITEM_NAME, BARCODE, ITEM_GROUP, SUB_GROUP, PACK_TYPE, IUOM, SUOM, PUOM, WUOM, ITEM_ACCOUNT, SUPPLIER, MANUFACTURER, BUY_PRICE, PROFIT_MARGIN, SALE_PRICE, WHOLE_PRICE, STOCK_PRICE, DISCOUNT_RATE, TAXABLE, TAX_RATE, TAX_GROUP, PRICE_GROUP, DESCRIPTION, LEVY_RATE1, LEVY_RATE2, MAX_STOCK, REORDER_LEVEL, CONVERSION, P_CONVERSION, S_CONVERSION, W_CONVERSION, SHELF_LIFE, ON_PROMOTION, PARENT_ITEM, ITEM_STATUS, BARCODE_TYPE, CATEGORY1, CATEGORY2, OPTION1, OPTION2, PACKAGE, UNIT_MEASURE, MEASURE_TYPE, BASE_MEASURE, PART_NUMBER, OEM_NUMBER, DEBIT_CHECK, DATA_OPTION, STOCK_PARENT, STOCK_RULE, STOCK_CODE, STOCK_CODE1, STOCK_CODE2, STOCK_CODE3, CHECK_OPTION1, CHECK_OPTION2, CHECK_OPTION3, CHECK_OPTION4, VALUE_OPTION1, VALUE_OPTION2, VALUE_OPTION3, VALUE_OPTION4, VALUE_RATE1, VALUE_RATE2, START_DATE, EXPIRE_DATE, VALUE_DATE, PROMOTION_TYPE, CHECK_CATEGORY, CONFIGURATION, DATE_CREATED, CREATED_BY, DATE_MODIFIED, MODIFIED_BY, EXPORT_INDICATOR, DATE_EXPORTED, EXPORTED_BY, PURCHASE_ACCOUNT, INVENTORY_ACCOUNT, CASH_ACCOUNT, BARCODE1, BARCODE2, BARCODE_TYPE1, BARCODE_TYPE2, SYNC_STATUS, TRADE_PRICE, TRADE_PRICE_TRIGGER, HAS_LEVIES, USE_DEFAULT_LOCATION, DEFAULT_LOCATION, DEFAULT_PACK, SALES_ACCOUNT, COS_ACCOUNT, GAIN_ACCOUNT, SALEABLE, PURCHASEABLE, PRODUCED, CONVERSION_OPTION, HAS_HEADERS, ITEM_CLASS, ECOMMERCE_SHOW, APPLIED_MODELS, APPLIED_ENGINES, ALTERNATE_PART_NUMBERS, BVP_PART_NUMBERS, TPROFIT_MARGIN, WPROFIT_MARGIN, SPROFIT_MARGIN) VALUES ('020028', 'STK', 'LARGE BAGS', NULL, 'S/H', 'GEN', 'EAC', 'EAC', 'EAC', 'EAC', 'EAC', '600100', NULL, NULL, 0.00, 0.000000, 0.00, 0.00, 0.00, 0.000, 'N', 16.000, 'NON', NULL, NULL, 0.000, 0.000, 0.000, 0.000, 1.00000000, 1.00000000, 1.00000000, 0.00, 0.00, 'N', NULL, 'ACT', 'EAN', NULL, NULL, 'N', 'N', NULL, 0.000, 'KG', 0.00000000, NULL, NULL, 'N', 'N', 'N', '*', NULL, NULL, NULL, NULL, 'N', 'N', 'N', 'N', 0.00, 0.00, 0.00, 0.00, 0.00000000, 0.00000000, NULL, NULL, NULL, '*', '*', 'CONFIGURATION', '2022-07-23 12:44:41', NULL, '2022-07-28 15:46:57', NULL, 'N', NULL, NULL, '710100', '220100', NULL, NULL, NULL, NULL, NULL, 'ADD', 0.00, 0.00, 'N', 'N', 'NON', 'EAC', '600100', '700100', '220300', 'Y', 'Y', 'N', 'A', 'N', 'NRM', NULL, NULL, NULL, NULL, NULL, 0.000000, 0.000000, 0.000000);";
+			}
+			catch (Exception ex)
+			{
+				Functions.NotifyError(ex);
+				throw;
+			}
+		}
+
+		internal static (List<ItemCode> items, List<ItemGroup> groups) RefreshMySQLItems()
+		{
+			MySqlConnection? con = null;
+			try
+			{
+				con = new ConnectionObject().MySQLSubServerConnection;
+				try
+				{
+					con.Open();
+				}
+				catch (Exception)
+				{
+					con = new ConnectionObject().MySQLDbConnection;
+				}
+
+				var sql = @"SELECT
+	tbl_stock_items.item_code,
+	tbl_stock_items.item_name,
 	tbl_stock_items.is_active,
     tbl_stock_items.distributor
 FROM
@@ -159,172 +160,275 @@ FROM
 ORDER BY item_code;
 
 SELECT
-	tbl_item_groups.group_id, 
+	tbl_item_groups.group_id,
 	tbl_item_groups.`name`
 FROM
 	tbl_item_groups
 where LENGTH(group_id) = 2;";
-                using var ds =  Functions.GetDbDataSet(con, sql);
-                using var table= ds.Tables[0];
-                var items = table.AsEnumerable().Select(row => new { ItemCode = row[0].ToString(), ItemName = row[1].ToString(), IsActive = bool.TryParse(row[2].ToString(), out bool nn) && nn, Distributor = row[3].ToString() })
-                    .OrderBy(c => !string.IsNullOrWhiteSpace(c.ItemName))
-                    .ThenBy(c => c.IsActive)
-                    .ThenBy(c => c.ItemCode?.Length)
-                    .GroupBy(c => c.ItemCode?.Trim())
-                    .Select(m =>
-                    {
-                        var itm = m.FirstOrDefault();
-                        return new ItemCode
-                        {
-                            Code = m.Key,
-                            Name = itm?.ItemName,
-                            OriginalName= itm?.ItemName,
-                            Distributor = itm?.Distributor,
-                            IsVerified = itm?.IsActive,
-                            ItemGroup =  itm?.ItemCode?.Length > 2? itm?.ItemCode?[..2] :""
-                        };
-                    }).Where(m => !string.IsNullOrWhiteSpace(m.Name) && CustomValidations.IsValidItemCode(m?.Code)).ToList();
+				using var ds = Functions.GetDbDataSet(con, sql);
+				using var table = ds.Tables[0];
+				var items = table.AsEnumerable().Select(row => new { ItemCode = row[0].ToString(), ItemName = row[1].ToString(), IsActive = bool.TryParse(row[2].ToString(), out bool nn) && nn, Distributor = row[3].ToString() })
+					.OrderBy(c => !string.IsNullOrWhiteSpace(c.ItemName))
+					.ThenBy(c => c.IsActive)
+					.ThenBy(c => c.ItemCode?.Length)
+					.GroupBy(c => c.ItemCode?.Trim())
+					.Select(m =>
+					{
+						var itm = m.FirstOrDefault();
+						return new ItemCode
+						{
+							Code = m.Key,
+							Name = itm?.ItemName,
+							OriginalName = itm?.ItemName,
+							Distributor = itm?.Distributor,
+							IsVerified = itm?.IsActive,
+							ItemGroup = itm?.ItemCode?.Length > 2 ? itm?.ItemCode?[..2] : ""
+						};
+					}).Where(m => !string.IsNullOrWhiteSpace(m.Name) && CustomValidations.IsValidItemCode(m?.Code)).ToList();
 
-                using var table2 = ds.Tables[1];
-                var groups = table2.AsEnumerable().Select(row => new ItemGroup
-                {
-                    GroupId = row[0].ToString(),
-                    GroupName = row[1].ToString(),
-                    IsEnabled = !(row[1].ToString()?.StartsWith("GROUP", StringComparison.OrdinalIgnoreCase) ?? true)
-                }).ToList();
+				using var table2 = ds.Tables[1];
+				var groups = table2.AsEnumerable().Select(row => new ItemGroup
+				{
+					GroupId = row[0].ToString(),
+					GroupName = row[1].ToString(),
+					IsEnabled = !(row[1].ToString()?.StartsWith("GROUP", StringComparison.OrdinalIgnoreCase) ?? true)
+				}).ToList();
 
-                Matcher.CheckCodes(ref items);
+				Matcher.CheckCodes(ref items);
 
-                foreach (var item in items)
-                {
-                    try
-                    {
-                        item.ItemGroup = groups.FirstOrDefault(c => c.GroupId == item?.Code?[..2])?.GroupName;
-                    }
-                    catch { }
-                }
+				foreach (var item in items)
+				{
+					try
+					{
+						item.ItemGroup = groups.FirstOrDefault(c => c.GroupId == item?.Code?[..2])?.GroupName;
+					}
+					catch { }
+				}
 
-                return (items, groups);
-            }
-            catch (Exception ex)
-            {
-                Functions.NotifyError(ex);
-            }
-            finally
-            {
-                con?.Dispose();
-            }
-            return new();
-        }
- 
-        //public static DataSet GetDb2DataSet(string sql, params IDbDataParameter[] parameters)
-        //{
-        //    var con = new ConnectionObject().MaliplusConnection;
-        //    if (con.State != ConnectionState.Open)
-        //        con.Open();
+				return (items, groups);
+			}
+			catch (Exception ex)
+			{
+				Functions.NotifyError(ex);
+			}
+			finally
+			{
+				con?.Dispose();
+			}
+			return new();
+		}
 
-        //     return Functions.GetDbDataSet(con, sql);
-        //}
+		//public static DataSet GetDb2DataSet(string sql, params IDbDataParameter[] parameters)
+		//{
+		//    var con = new ConnectionObject().MaliplusConnection;
+		//    if (con.State != ConnectionState.Open)
+		//        con.Open();
 
-        //public static object GetDb2Scalar(string sql, params IDbDataParameter[] parameters)
-        //{
-        //    var con = new ConnectionObject().MaliplusConnection;
-        //    if (con.State != ConnectionState.Open)
-        //        con.Open();
+		//     return Functions.GetDbDataSet(con, sql);
+		//}
 
-        //    using var cmd = con.CreateCommand();
-        //    cmd.CommandText = sql;
+		//public static object GetDb2Scalar(string sql, params IDbDataParameter[] parameters)
+		//{
+		//    var con = new ConnectionObject().MaliplusConnection;
+		//    if (con.State != ConnectionState.Open)
+		//        con.Open();
 
-        //    if (parameters != null)
-        //        foreach (var par in parameters)
-        //            cmd.Parameters.Add(par);
+		//    using var cmd = con.CreateCommand();
+		//    cmd.CommandText = sql;
 
-        //    return cmd.ExecuteScalar();
-        //}
+		//    if (parameters != null)
+		//        foreach (var par in parameters)
+		//            cmd.Parameters.Add(par);
 
-        //public static int ExecuteDb2NonQuery(string sql, params IDbDataParameter[] parameters)
-        //{
-        //    var con = new ConnectionObject().MaliplusConnection;            
-        //    if (con.State != ConnectionState.Open)
-        //        con.Open();
+		//    return cmd.ExecuteScalar();
+		//}
 
-        //    using var cmd = con.CreateCommand();
-        //    cmd.CommandText = sql;
+		//public static int ExecuteDb2NonQuery(string sql, params IDbDataParameter[] parameters)
+		//{
+		//    var con = new ConnectionObject().MaliplusConnection;
+		//    if (con.State != ConnectionState.Open)
+		//        con.Open();
 
-        //    if (parameters != null)
-        //        foreach (var par in parameters)
-        //            cmd.Parameters.Add(par);
+		//    using var cmd = con.CreateCommand();
+		//    cmd.CommandText = sql;
 
-        //    return cmd.ExecuteNonQuery();
-        //}
+		//    if (parameters != null)
+		//        foreach (var par in parameters)
+		//            cmd.Parameters.Add(par);
 
-        public static DataSet GetMySqlDataSet(string sql, params IDbDataParameter[] parameters)
-        {
-            var con = new ConnectionObject().MySQLSubServerConnection;
-            try
-            {
-                con.Open();
-            }
-            catch (Exception)
-            {
-                con = new ConnectionObject().MySQLDbConnection;
-            }
+		//    return cmd.ExecuteNonQuery();
+		//}
 
-            if (con.State != ConnectionState.Open)
-                con.Open();
+		public static DataSet GetMySqlDataSet(string sql, params IDbDataParameter[] parameters)
+		{
+			var con = new ConnectionObject().MySQLSubServerConnection;
+			try
+			{
+				con.Open();
+			}
+			catch (Exception)
+			{
+				con = new ConnectionObject().MySQLDbConnection;
+			}
 
-            return Functions.GetDbDataSet(con, sql);
-        }
+			if (con.State != ConnectionState.Open)
+				con.Open();
 
-        public static object? GetMySqlScalar(string sql, params IDbDataParameter[] parameters)
-        {
-            var con = new ConnectionObject().MySQLSubServerConnection;
-            try
-            {
-                con.Open();
-            }
-            catch (Exception)
-            {
-                con = new ConnectionObject().MySQLDbConnection;
-            }
+			return Functions.GetDbDataSet(con, sql);
+		}
 
-            if (con.State != ConnectionState.Open)
-                con.Open();
+		public static object? GetMySqlScalar(string sql, params IDbDataParameter[] parameters)
+		{
+			var con = new ConnectionObject().MySQLSubServerConnection;
+			try
+			{
+				con.Open();
+			}
+			catch (Exception)
+			{
+				con = new ConnectionObject().MySQLDbConnection;
+			}
 
-            using var cmd = con.CreateCommand();
+			if (con.State != ConnectionState.Open)
+				con.Open();
 
-            cmd.CommandText = sql;
+			using var cmd = con.CreateCommand();
 
-            if (parameters != null)
-                foreach (var par in parameters)
-                    cmd.Parameters.Add(par);
+			cmd.CommandText = sql;
 
-            return cmd.ExecuteScalar();
-        }
+			if (parameters != null)
+				foreach (var par in parameters)
+					cmd.Parameters.Add(par);
 
-        public static int ExecuteMySqlNonQuery(string sql, params IDbDataParameter[] parameters)
-        {
-            var con = new ConnectionObject().MySQLSubServerConnection;
-            try
-            {
-                con.Open();
-            }
-            catch (Exception)
-            {
-                con = new ConnectionObject().MySQLDbConnection;
-            }
+			return cmd.ExecuteScalar();
+		}
 
-            if (con.State != ConnectionState.Open)
-                con.Open();
+		public static int ExecuteMySqlNonQuery(string sql, params IDbDataParameter[] parameters)
+		{
+			var con = new ConnectionObject().MySQLSubServerConnection;
+			try
+			{
+				con.Open();
+			}
+			catch (Exception)
+			{
+				con = new ConnectionObject().MySQLDbConnection;
+			}
 
-            using var cmd = con.CreateCommand();
-            cmd.CommandText = sql;
+			if (con.State != ConnectionState.Open)
+				con.Open();
 
-            if (parameters != null)
-                foreach (var par in parameters)
-                    cmd.Parameters.Add(par);
+			using var cmd = con.CreateCommand();
+			cmd.CommandText = sql;
 
-            return cmd.ExecuteNonQuery();
-        }
-    }
+			if (parameters != null)
+				foreach (var par in parameters)
+					cmd.Parameters.Add(par);
+
+			return cmd.ExecuteNonQuery();
+		}
+
+		static string? LoginId = null;
+		internal static async Task<bool> Login(string? username, string password)
+		{
+			using var ds = GetMySqlDataSet(@"SELECT
+	tbl_system_users.user_id,
+	tbl_system_users.name_of_the_user,
+	tbl_system_users.username,
+	tbl_system_users.password_hash,
+	tbl_system_users.password_salt,
+	tbl_system_users.is_active
+FROM
+	tbl_system_users  -- WHERE
+-- username = @username");
+			var data = ds.Tables[0].AsEnumerable()
+				.Select(row => new
+				{
+					Id = row["user_id"].ToString(),
+					Name = row["name_of_the_user"].ToString(),
+					Username = row["username"].ToString(),
+					PasswordHash = (byte[]?)row["password_hash"],
+					PasswordSalt = (byte[]?)row["password_salt"],
+					IsActive = (bool?)row["is_active"]
+				}).Where(m => m.Username?.ToLower() == username?.ToLower()).ToArray();
+
+			var sql = @"SET @prefix = 'KU-OG5B-000005';
+
+SELECT EXISTS (
+SELECT
+	1
+FROM
+	tbl_user_rights
+WHERE (right_id IN ('AAA-22', 'AAA-20') AND user_id = @prefix) 
+UNION SELECT
+	1
+FROM
+	tbl_system_users
+	INNER JOIN
+	tbl_user_roles
+	ON 
+		tbl_system_users.role_id = tbl_user_roles.role_id
+	WHERE user_id = @prefix AND 
+	(tbl_user_roles.role_name LIKE '%manager%'
+	OR tbl_user_roles.role_name LIKE '%admin%'))";
+
+			MainWindow.CanUpdateData = GetMySqlScalar(sql)?.ToString() == "1";
+
+
+
+			var users = data.Where(c => VerifyPasswordHash(password, c.PasswordHash, c.PasswordSalt));
+
+			try
+			{
+				var narration = $"Computer: {Environment.MachineName}(User: {Environment.UserName})";
+				var userId = users.First().Id;
+				sql = $@"SET @prefix = (SELECT MAX(CAST(`code` AS UNSIGNED)) FROM (SELECT SUBSTR(login_id,6) `code` FROM tbl_user_logins WHERE login_id LIKE 'CODE-%') A);
+-- SET @prefix = (SELECT MAX CAST( AS UNSIGNED);
+SET @id =  CONCAT('CODE-',LPAD(IFNULL(@prefix, 0)+1, 2,'0'));
+SET @date = now();
+SET @narration = '{narration}';
+SET @userId = '{userId}';
+SET @timeStamp = {DateTime.Now:yyyyMMddHHmmss}000;
+
+INSERT INTO `kfa_sub_systems`.`tbl_user_logins`(`login_id`, `device_id`, `from_date`, `narration`, `upto_date`, `user_id`, `UserLoginId`, `record_verification_id`, `record_comment_id`, `is_currently_enabled`, `date_added`, `date_updated`, `originator_id`) VALUES (@id, '01C4 57C5 B16F AC7B 1889 76E8 50C2 65BB', @date, @narration, @date, @userId , NULL, NULL, NULL, 1, @timeStamp, @timeStamp, 100000001);
+
+
+SELECT @id;";
+
+				LoginId = GetMySqlScalar(sql)?.ToString();
+
+				Logout code then on update record login id
+			}
+			catch { }
+
+			if (users.Any())
+			{
+				DbService.user = users.First().Name;
+				return true;
+			}
+			return false;
+		}
+
+		private static bool VerifyPasswordHash(string password, byte[]? passwordHash, byte[]? passwordSalt)
+		{
+			try
+			{
+				if (passwordHash != null && passwordSalt != null)
+				{
+					using var hmac = new global::System.Security.Cryptography.HMACSHA512(passwordSalt);
+					var computedHash = hmac.ComputeHash(global::System.Text.Encoding.UTF8.GetBytes(password));
+					for (int i = 0; i < computedHash.Length; i++)
+						if (computedHash[i] != passwordHash[i]) return false;
+
+					return true;
+				}
+			}
+			catch
+			{
+				throw new Exception("Error in retrieving your current password");
+			}
+
+			return false;
+		}
+	}
 }

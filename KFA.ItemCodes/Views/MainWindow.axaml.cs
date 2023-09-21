@@ -18,5 +18,7 @@ namespace KFA.ItemCodes.Views
         {
             InitializeComponent();
         }
-    }
+
+		public static bool CanUpdateData { get; internal set; }
+	}
 }

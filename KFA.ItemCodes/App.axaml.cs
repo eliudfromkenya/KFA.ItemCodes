@@ -18,8 +18,9 @@ namespace KFA.ItemCodes
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                desktop.MainWindow = MainWindow =  new HomePage();                
-            }
+                MainWindow =  new HomePage();
+                desktop.MainWindow = new LoginPage();
+			}
 
             base.OnFrameworkInitializationCompleted();
         }

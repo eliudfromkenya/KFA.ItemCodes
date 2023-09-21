@@ -76,6 +76,9 @@
    
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="Views\LoginPage.axaml.cs">
+      <DependentUpon>LoginPage.axaml</DependentUpon>
+    </Compile>
     <Compile Update="Views\EditSupplierPage.axaml.cs">
       <DependentUpon>EditSupplierPage.axaml</DependentUpon>
     </Compile>

@@ -22,8 +22,8 @@ namespace KFA.ItemCodes.ViewModels
         private string message;
         private string errorMessage;
         internal static ObservableCollection<ItemGroup> itemGroups;
-
-        public string? Message { get => message; set => this.RaiseAndSetIfChanged(ref message, value); }
+		public bool CanUpdate => KFA.ItemCodes.Views.MainWindow.CanUpdateData;
+		public string? Message { get => message; set => this.RaiseAndSetIfChanged(ref message, value); }
         public string? ErrorMessage { get => errorMessage; set => this.RaiseAndSetIfChanged(ref errorMessage, value); }
 
         public ICommand RefreshDataCommand { get; }
