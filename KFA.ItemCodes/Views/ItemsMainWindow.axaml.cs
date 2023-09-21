@@ -32,8 +32,9 @@ namespace KFA.ItemCodes.Views
              this.FindControl<Button>("CloseButton")
                 .Events().Click.Subscribe(cc =>
                 {
-                     Environment.Exit(0);
-                }).DisposeWith(disposable);
+                    DbService.Logout();
+					App.MainWindow.Close();
+				}).DisposeWith(disposable);
 
             ViewModel.CanUpdate = Views.MainWindow.CanUpdateData;
 
