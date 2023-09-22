@@ -98,7 +98,7 @@ namespace KFA.ItemCodes.Views
               {
                   try
                   {
-					  if (Views.MainWindow.CanUpdateData)
+					  if (!Views.MainWindow.CanUpdateData)
 						  throw new Exception("You are not allowed to update item codes\r\nPlease contact system admin");
 
 					  var supplierCode =TxtSupplierCode.Text?.ToUpper();

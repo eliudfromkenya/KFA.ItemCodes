@@ -59,7 +59,7 @@ FROM
 		{
 			try
 			{
-				if (Views.MainWindow.CanUpdateData)
+				if (!Views.MainWindow.CanUpdateData)
 					throw new Exception("You are not allowed to update item codes\r\nPlease contact system admin");
 
 				if (!CustomValidations.IsValidItemCode(itemCode))
@@ -373,10 +373,14 @@ FROM
 
 			var users = data.Where(c => VerifyPasswordHash(password, c.PasswordHash, c.PasswordSalt));
 
+			var user = users.First();
+			if (user.IsActive != true)
+				throw new Exception("You have been deactivated. Please contact information system");
+
 			try
 			{
-				var userId = users.First().Id;
-				var sql = $@"SET @prefix = '{userId}';
+				
+				var sql = $@"SET @prefix = '{user.Id}';
 
 SELECT EXISTS (
 SELECT
