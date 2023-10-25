@@ -183,15 +183,60 @@ namespace KFA.ItemCodes.Views
                        return;
                    try
                    {
-                       var sql = $@"SELECT MAX(CAST(SUBSTR(code, 4) AS UNSIGNED))+1 num FROM
-(SELECT supplier_code code FROM tbl_suppliers UNION SELECT ledger_account_code code FROM tbl_ledger_accounts) A
-WHERE code LIKE '{prefix}%' AND code NOT LIKE '{prefix}7%' AND LENGTH(code) = 6 AND code != '{prefix}499'";
-                       if (int.TryParse(SupplierDbService.GetMySqlScalar(sql)?.ToString(), out int mm) && mm > 0)
+					   //                       var sql = $@"SELECT MAX(CAST(SUBSTR(code, 4) AS UNSIGNED))+1 num FROM
+					   //(SELECT supplier_code code FROM tbl_suppliers UNION SELECT ledger_account_code code FROM tbl_ledger_accounts) A
+					   //WHERE code LIKE '{prefix}%' AND code NOT LIKE '{prefix}7%' AND LENGTH(code) = 6 AND code != '{prefix}499'";
+
+					   var sql = $@"DROP TABLE IF EXISTS tbl_supplier_codes;
+DROP TABLE IF EXISTS tbl_temp_nums;
+DROP TABLE IF EXISTS tbl_temp_generated_codes;
+
+SET @prefix = '{prefix}';  
+CREATE TEMPORARY TABLE tbl_supplier_codes 
+(Digit int);
+
+CREATE TABLE tbl_temp_nums 
+(Digit int);
+
+INSERT INTO tbl_temp_nums VALUES(0),(1),(2),(3),(4),(5),(6),(7),(8),(9);
+
+-- SELECT * FROM tbl_temp_nums;
+
+INSERT INTO tbl_supplier_codes (Digit) 
+SELECT id
+FROM
+(
+SELECT t4.digit * 1000 + t3.digit * 100 + t2.digit * 10 + t1.digit + 1 AS id
+FROM tbl_temp_nums  AS t1 CROSS JOIN tbl_temp_nums AS t2
+  CROSS JOIN tbl_temp_nums AS t3
+  CROSS JOIN tbl_temp_nums AS t4
+) t;
+
+
+CREATE TEMPORARY TABLE tbl_temp_generated_codes AS SELECT CONCAT(@prefix, LPAD(Digit,3,'0')) code FROM tbl_supplier_codes WHERE Digit > 450 AND Digit <> 499 AND Digit NOT LIKE '7%';
+
+SELECT code FROM tbl_temp_generated_codes WHERE code NOT IN (SELECT DISTINCT ledger_account_code FROM
+(SELECT ledger_account_code FROM tbl_ledger_accounts
+UNION SELECT ledger_account_id FROM tbl_ledger_accounts
+UNION SELECT supplier_id FROM tbl_suppliers
+UNION SELECT supplier_code FROM tbl_suppliers) A
+WHERE ledger_account_code LIKE CONCAT(@prefix,'%')) LIMIT 1;
+
+DROP TABLE IF EXISTS tbl_supplier_codes;
+DROP TABLE IF EXISTS tbl_temp_nums;
+DROP TABLE IF EXISTS tbl_temp_generated_codes;
+";
+                       var code = SupplierDbService.GetMySqlScalar(sql)?.ToString();
+					   if (int.TryParse(code, out int mm) && mm > 0)
                        {
                            if (mm < 800 && mm > 699)
                                mm = 800;
                            MainSupplierWindowViewModel.nextId = $"{prefix}{mm.ToString("000")}";
                        }
+                       else
+                       {
+						   MainSupplierWindowViewModel.nextId = code;
+					   }
 
                    }
                    catch (Exception ex)

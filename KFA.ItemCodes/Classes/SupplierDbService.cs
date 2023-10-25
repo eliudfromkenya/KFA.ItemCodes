@@ -206,7 +206,15 @@ FROM
 
                 for (int i = 0; i < ds.Tables[0].Rows.Count; i++)
                 {
-                    var row = ds.Tables[1].Rows[i];
+                    DataRow? row = null;
+                    try
+                    {
+						row = ds.Tables[1].Rows[i];
+					}
+                    catch (Exception)
+                    {
+                        continue;
+                    }
                     var code = row[0].ToString();
                     var name = row[1].ToString();
                     var supplier = suppliers.FirstOrDefault(n => n.Code == code);

@@ -51,7 +51,7 @@
             Classes="data"
             Focusable="False"
             FontSize="26"
-            Text="Item Name" />
+            Text="Username" />
 
         <TextBox
             Name="TxtUsername"
@@ -71,7 +71,7 @@
             Classes="data"
             Focusable="False"
             FontSize="26"
-            Text="Supplier" />
+            Text="Password" />
 
         <TextBox
             Name="TxtPassword"
