@@ -99,7 +99,7 @@ FROM
                 {
                     ExecuteMySqlNonQuery($@"UPDATE tbl_ledger_accounts SET description = @supplierName, `date_updated`='{DateTime.Now:yyyyMMdd}100756977', cost_centre_code = '{branch.Code}' WHERE ledger_account_code = '{supplierCode}';", new MySqlParameter("supplierName", supplierName));
 
-                    ExecuteMySqlNonQuery($@"UPDATE tbl_suppliers SET description = @supplierName, telephone=@telephone, email= @email, address = @address, `date_updated`={DateTime.Now:yyyyMMdd}100756977, cost_centre_code = {branch.Code} WHERE supplier_code = '{supplierCode}';", new MySqlParameter("telephone", telephone), new MySqlParameter("email", email), new MySqlParameter("address", address), new MySqlParameter("supplierName", supplierName));
+                    ExecuteMySqlNonQuery($@"UPDATE tbl_suppliers SET description = @supplierName, telephone=@telephone, email= @email, address = @address, `date_updated`={DateTime.Now:yyyyMMddHHmmss}977, cost_centre_code = {branch.Code} WHERE supplier_code = '{supplierCode}';", new MySqlParameter("telephone", telephone), new MySqlParameter("email", email), new MySqlParameter("address", address), new MySqlParameter("supplierName", supplierName));
                 }
                 else
                 {
@@ -115,7 +115,7 @@ FROM
 	increase_with_debit, 
 	main_group, 
 	is_active 
-	) VALUES('{supplierCode}',1, {DateTime.Now:yyyyMMdd}100756977, {DateTime.Now:yyyyMMdd}100756977, 30000000123, '{branch.Code}', @supplierName, 'Suppliers', '{supplierCode}', 1, 'Stocks Suppliers', 1);";
+	) VALUES('{supplierCode}',1, {DateTime.Now:yyyyMMddHHmmss}977, {DateTime.Now:yyyyMMddHHmmss}977, 30000000123, '{branch.Code}', @supplierName, 'Suppliers', '{supplierCode}', 1, 'Stocks Suppliers', 1);";
 
                     ExecuteMySqlNonQuery(sql, new MySqlParameter("supplierName", supplierName));
 
@@ -130,7 +130,7 @@ FROM
 	date_added, 
 	date_updated, 
 	originator_id 
-	) VALUES('{supplierCode}','{supplierCode}','{telephone}',@address, '{email}','{branch.Code}', @supplierName, 1, {DateTime.Now:yyyyMMdd}100756977, {DateTime.Now:yyyyMMdd}100756977, 30000000123);";
+	) VALUES('{supplierCode}','{supplierCode}','{telephone}',@address, '{email}','{branch.Code}', @supplierName, 1, {DateTime.Now:yyyyMMddHHmmss}977, {DateTime.Now:yyyyMMddHHmmss}977, 30000000123);";
 
                     ExecuteMySqlNonQuery(sql, new MySqlParameter("address", address), new MySqlParameter("supplierName", supplierName));
                 }               

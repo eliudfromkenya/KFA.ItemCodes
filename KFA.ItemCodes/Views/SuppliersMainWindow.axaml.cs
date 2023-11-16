@@ -231,7 +231,7 @@ DROP TABLE IF EXISTS tbl_temp_generated_codes;
                        {
                            if (mm < 800 && mm > 699)
                                mm = 800;
-                           MainSupplierWindowViewModel.nextId = $"{prefix}{mm.ToString("000")}";
+                           MainSupplierWindowViewModel.nextId = $"{prefix}{mm:000}";
                        }
                        else
                        {

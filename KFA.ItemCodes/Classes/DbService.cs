@@ -106,10 +106,10 @@ FROM
 					}
 					catch (Exception) { }
 
-					sql = $"UPDATE `tbl_stock_items` SET `item_name`= '{itemName?.Replace("'", "''")}',`date_updated`={DateTime.Now:yyyyMMdd}100756977, barcode = '{user?.Replace("'", "''")}', `distributor` = {(string.IsNullOrWhiteSpace(supplier) ? "NULL" : $"'{supplier.Replace("'", "''")}'")} WHERE `item_code` = '{itemCode}'";
+					sql = $"UPDATE `tbl_stock_items` SET `item_name`= '{itemName?.Replace("'", "''")}',`date_updated`={DateTime.Now:yyyyMMddHHmmss}977, barcode = '{user?.Replace("'", "''")}', `distributor` = {(string.IsNullOrWhiteSpace(supplier) ? "NULL" : $"'{supplier.Replace("'", "''")}'")} WHERE `item_code` = '{itemCode}'";
 				}
 				else
-					sql = $"INSERT INTO `tbl_stock_items`(barcode, `date_added`, `date_updated`, `originator_id`, `is_currently_enabled`, `item_code`, `distributor`, `group_id`, `item_name`, `is_active`) VALUES ('{user?.Replace("'", "''")}', {DateTime.Now:yyyyMMdd}100756977, {DateTime.Now:yyyyMMdd}100756977, 30000000123, 1, '{itemCode}', {(string.IsNullOrWhiteSpace(supplier) ? "NULL" : $"'{supplier.Replace("'", "''")}'")},'{itemCode[..2]}', '{itemName?.Replace("'", "''")}', 1);";
+					sql = $"INSERT INTO `tbl_stock_items`(barcode, `date_added`, `date_updated`, `originator_id`, `is_currently_enabled`, `item_code`, `distributor`, `group_id`, `item_name`, `is_active`) VALUES ('{user?.Replace("'", "''")}', {DateTime.Now:yyyyMMddHHmmss}977, {DateTime.Now:yyyyMMddHHmmss}977, 30000000123, 1, '{itemCode}', {(string.IsNullOrWhiteSpace(supplier) ? "NULL" : $"'{supplier.Replace("'", "''")}'")},'{itemCode[..2]}', '{itemName?.Replace("'", "''")}', 1);";
 
 				try
 				{
