@@ -137,19 +137,9 @@ FROM
 
 		internal static (List<ItemCode> items, List<ItemGroup> groups) RefreshMySQLItems()
 		{
-			MySqlConnection? con = null;
+			MySqlConnection? con = new ConnectionObject().MySQLConnection;
 			try
 			{
-				con = new ConnectionObject().MySQLSubServerConnection;
-				try
-				{
-					con.Open();
-				}
-				catch (Exception)
-				{
-					con = new ConnectionObject().MySQLDbConnection;
-				}
-
 				var sql = @"SELECT
 	tbl_stock_items.item_code,
 	tbl_stock_items.item_name,
@@ -261,16 +251,8 @@ where LENGTH(group_id) = 2;";
 
 		public static DataSet GetMySqlDataSet(string sql, params IDbDataParameter[] parameters)
 		{
-			var con = new ConnectionObject().MySQLSubServerConnection;
-			try
-			{
-				con.Open();
-			}
-			catch (Exception)
-			{
-				con = new ConnectionObject().MySQLDbConnection;
-			}
-
+			var con = new ConnectionObject().MySQLConnection;
+			
 			if (con.State != ConnectionState.Open)
 				con.Open();
 
@@ -279,16 +261,8 @@ where LENGTH(group_id) = 2;";
 
 		public static object? GetMySqlScalar(string sql, params IDbDataParameter[] parameters)
 		{
-			var con = new ConnectionObject().MySQLSubServerConnection;
-			try
-			{
-				con.Open();
-			}
-			catch (Exception)
-			{
-				con = new ConnectionObject().MySQLDbConnection;
-			}
-
+			var con = new ConnectionObject().MySQLConnection;
+			
 			if (con.State != ConnectionState.Open)
 				con.Open();
 
@@ -305,16 +279,8 @@ where LENGTH(group_id) = 2;";
 
 		public static int ExecuteMySqlNonQuery(string sql, params IDbDataParameter[] parameters)
 		{
-			var con = new ConnectionObject().MySQLSubServerConnection;
-			try
-			{
-				con.Open();
-			}
-			catch (Exception)
-			{
-				con = new ConnectionObject().MySQLDbConnection;
-			}
-
+			var con = new ConnectionObject().MySQLConnection;
+			
 			if (con.State != ConnectionState.Open)
 				con.Open();
 

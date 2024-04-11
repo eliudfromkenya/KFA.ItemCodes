@@ -29,19 +29,37 @@ namespace KFA.ItemCodes.Views
         private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
         private void IsActivated(CompositeDisposable disposable)
         {
-             this.FindControl<Button>("CloseButton")
+			var searchCtrl = this.FindControl<AutoCompleteBox>("TxtSearch");
+			var rbNormalSearch = this.FindControl<RadioButton>("rbNormalSearch");
+			var rbAdvSearch = this.FindControl<RadioButton>("rbAdvancedSearch");
+			var dgItems = this.FindControl<DataGrid>("DgItems");
+
+			this.FindControl<Button>("CloseButton")
                 .Events().Click.Subscribe(cc =>
                 {
                     DbService.Logout();
 					App.MainWindow.Close();
 				}).DisposeWith(disposable);
 
-            ViewModel.CanUpdate = Views.MainWindow.CanUpdateData;
+			this.FindControl<Button>("BtnPublish")
+			   .Events().Click.Subscribe(async cc =>
+			   {
+                   try
+                   {
+                      if (dgItems.SelectedItem is  ItemCode item)
+                       {
+                           await PlayWrightAutomator.Generate(new PlayWrightAutomator.DynamicsItem(item.Code, item.Name, "3130", 590, 750), "Eliud", "1540Bags!");
+                       }
+				   }
+                   catch (Exception ex)
+                   {
+					   Functions.NotifyError(ex);
+				   }
+			   }).DisposeWith(disposable);
 
-            var searchCtrl = this.FindControl<AutoCompleteBox>("TxtSearch");
-            var rbNormalSearch = this.FindControl<RadioButton>("rbNormalSearch");
-            var rbAdvSearch = this.FindControl<RadioButton>("rbAdvancedSearch");
-            var dgItems = this.FindControl<DataGrid>("DgItems");
+			ViewModel.CanUpdate = Views.MainWindow.CanUpdateData;
+
+         
 
             void ReloadDataGrid(bool? advancedSearch= null)
             {

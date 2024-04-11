@@ -35,6 +35,7 @@
           <ColumnDefinition Width="Auto" />
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="Auto" />
+		  <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
           <RowDefinition />
@@ -43,6 +44,7 @@
         <Label Grid.Column="1" VerticalAlignment="Center" Content="Search" Opacity=".7" />
         <AutoCompleteBox Grid.Column="2"  MinWidth="150" Margin="0" Name="TxtSearch" BorderBrush="LightBlue" VerticalAlignment="Center" BorderThickness="1" />
         <Button Name="BtnRefresh" Grid.Column="3" Margin="10" VerticalAlignment="Center" MinWidth="70" IsDefault="True" Content="Go" HorizontalAlignment="Right" />
+		<Button Name="BtnPublish" Grid.Column="4" Margin="10" VerticalAlignment="Center" MinWidth="70" IsDefault="True" Content="Publish to Dynamics" HorizontalAlignment="Right" />
       </Grid>
       <DataGrid HorizontalAlignment="Stretch" Name="DgItems"  Grid.Row="1" BorderThickness="1" RowHeight="{Binding ListRowHeight}" Width="1000" Items="{Binding Models}" FontSize="24" Background="Transparent" SelectedItem="{Binding SelectedItem}"
            SelectionMode="Extended" HorizontalScrollBarVisibility="Auto" VerticalAlignment="Stretch"

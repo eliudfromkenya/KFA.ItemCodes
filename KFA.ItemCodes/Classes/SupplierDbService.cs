@@ -148,16 +148,8 @@ FROM
             MySqlConnection? con = null;
             try
             {
-                con = new ConnectionObject().MySQLSubServerConnection;
-                try
-                {
-                    con.Open();
-                }
-                catch (Exception)
-                {
-                    con = new ConnectionObject().MySQLDbConnection;
-                }
-
+                con = new ConnectionObject().MySQLConnection;
+                
                 var sql = @"SELECT
 	-- tbl_ledger_accounts.ledger_account_id, 
 	tbl_ledger_accounts.ledger_account_code, 
@@ -337,15 +329,8 @@ FROM
 
         public static DataSet GetMySqlDataSet(string sql, params IDbDataParameter[] parameters)
         {
-            var con = new ConnectionObject().MySQLSubServerConnection;
-            try
-            {
-                con.Open();
-            }
-            catch (Exception)
-            {
-                con = new ConnectionObject().MySQLDbConnection;
-            }
+            var con = new ConnectionObject().MySQLConnection;
+           
 
             if (con.State != ConnectionState.Open)
                 con.Open();
@@ -355,16 +340,8 @@ FROM
 
         public static object? GetMySqlScalar(string sql, params IDbDataParameter[] parameters)
         {
-            var con = new ConnectionObject().MySQLSubServerConnection;
-            try
-            {
-                con.Open();
-            }
-            catch (Exception)
-            {
-                con = new ConnectionObject().MySQLDbConnection;
-            }
-
+            var con = new ConnectionObject().MySQLConnection;
+            
             if (con.State != ConnectionState.Open)
                 con.Open();
 
@@ -381,16 +358,8 @@ FROM
 
         public static int ExecuteMySqlNonQuery(string sql, params IDbDataParameter[] parameters)
         {
-            var con = new ConnectionObject().MySQLSubServerConnection;
-            try
-            {
-                con.Open();
-            }
-            catch (Exception)
-            {
-                con = new ConnectionObject().MySQLDbConnection;
-            }
-
+            var con = new ConnectionObject().MySQLConnection;
+            
             if (con.State != ConnectionState.Open)
                 con.Open();
 
