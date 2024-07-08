@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using ReactiveMarbles.ObservableEvents;
 
 namespace KFA.ItemCodes.Views
 {
@@ -68,13 +69,13 @@ namespace KFA.ItemCodes.Views
                     var text = searchCtrl?.Text;
                     if (string.IsNullOrWhiteSpace(text))
                     {
-                        dgItems.Items = ViewModel?.Models;
+                        dgItems.ItemsSource = ViewModel?.Models;
                         return;
                     }
 
                     advancedSearch ??= rbAdvSearch?.IsChecked;
                     text = Matcher.CheckCodesName(Matcher.CheckHarmonizedName(text?.ToUpper())).name;
-                    dgItems.Items = SearchService.SearchItemCode(text, ViewModel?.Models, advancedSearch ?? false);
+                    dgItems.ItemsSource = SearchService.SearchItemCode(text, ViewModel?.Models, advancedSearch ?? false);
                 }
                 catch (Exception ex)
                 {

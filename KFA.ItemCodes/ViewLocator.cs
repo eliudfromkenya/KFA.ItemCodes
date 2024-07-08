@@ -1,13 +1,14 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
+using Avalonia.Markup.Xaml.Templates;
 using KFA.ItemCodes.ViewModels;
 using System;
 
 namespace KFA.ItemCodes
 {
-    public class ViewLocator : IDataTemplate
+    public class ViewLocator : DataTemplate
     {
-        public IControl Build(object data)
+        public Control Build(object data)
         {
             var name = data.GetType().FullName!.Replace("ViewModel", "View");
             var type = Type.GetType(name);

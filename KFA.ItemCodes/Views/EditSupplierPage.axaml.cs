@@ -6,11 +6,12 @@ using System.Threading.Tasks;
 using KFA.ItemCodes.Classes;
 using KFA.ItemCodes.ViewModels;
 using System.Linq;
-using AvaloniaEdit.Utils;
 using LevenshteinDistanceAlgorithm;
 using System.Collections.Generic;
 using KFA.ItemCodes.LevenshteinDistanceAlgorithm;
 using System.Reactive.Linq;
+using ReactiveMarbles.ObservableEvents;
+
 
 namespace KFA.ItemCodes.Views
 {
@@ -31,9 +32,9 @@ namespace KFA.ItemCodes.Views
             TxtEmail = this.FindControl<AutoCompleteBox>("TxtEmail");
             TxtAddress = this.FindControl<AutoCompleteBox>("TxtAddress");
 
-            foreach (var txt in new[] {TxtSupplierCode,TxtSupplierName,TxtBranches,TxtTelephone/*TxtEmail,*//*TxtAddress*/})
+            foreach (AutoCompleteBox txt in new[] {TxtSupplierCode,TxtSupplierName,TxtBranches,TxtTelephone/*TxtEmail,*//*TxtAddress*/})
             {
-                txt.Events()
+                txt!.Events()                  
                    .TextChanged.Throttle(TimeSpan.FromMilliseconds(300))
                    .Subscribe(tt => Functions.RunOnMain(() => txt.Text = txt.Text?.ToUpper()));
             }
@@ -181,7 +182,9 @@ namespace KFA.ItemCodes.Views
                               }
                           };
                           //Matcher.CheckSupplierCodes(ref suppliers);
-                          MainSupplierWindowViewModel.models.AddRange(suppliers);
+
+                          suppliers.ForEach(supplier =>
+                          MainSupplierWindowViewModel.models.Add(supplier));
                             Functions.Notify($"Successfully added supplier {supplierCode} - {supplierName}");
                       }
                      

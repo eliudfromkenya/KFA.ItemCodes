@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using ReactiveMarbles.ObservableEvents;
 
 namespace KFA.ItemCodes.Views
 {
@@ -33,7 +34,7 @@ namespace KFA.ItemCodes.Views
         private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
         private void IsActivated(CompositeDisposable disposable)
         {
-            this.FindControl<Button>("CloseButton")
+            this.FindControl<Button>("CloseButton")!
                .Events().Click.Subscribe(cc =>
                {
 				   DbService.Logout();
@@ -134,7 +135,7 @@ namespace KFA.ItemCodes.Views
                     }
 
 
-                    dgSuppliers.Items = string.IsNullOrWhiteSpace(text) ? models : SearchService.SearchSupplierCode(text, models, advancedSearch ?? false);
+                    dgSuppliers.ItemsSource = string.IsNullOrWhiteSpace(text) ? models : SearchService.SearchSupplierCode(text, models, advancedSearch ?? false);
                 }
                 catch (Exception ex)
                 {
@@ -191,7 +192,7 @@ namespace KFA.ItemCodes.Views
 DROP TABLE IF EXISTS tbl_temp_nums;
 DROP TABLE IF EXISTS tbl_temp_generated_codes;
 
-SET @prefix = '{prefix}';  
+SET @prefix = 'S8E';  
 CREATE TEMPORARY TABLE tbl_supplier_codes 
 (Digit int);
 
@@ -212,15 +213,18 @@ FROM tbl_temp_nums  AS t1 CROSS JOIN tbl_temp_nums AS t2
   CROSS JOIN tbl_temp_nums AS t4
 ) t;
 
+-- DELETE FROM tbl_supplier_codes WHERE Digit <= 420;
 
-CREATE TEMPORARY TABLE tbl_temp_generated_codes AS SELECT CONCAT(@prefix, LPAD(Digit,3,'0')) code FROM tbl_supplier_codes WHERE Digit > 450 AND Digit <> 499 AND Digit NOT LIKE '7%';
+CREATE TEMPORARY TABLE tbl_temp_generated_codes AS SELECT DISTINCT CONCAT(@prefix, LPAD(Digit,3,'0')) `code` FROM tbl_supplier_codes WHERE Digit > 450 AND Digit <> 499 AND Digit NOT LIKE '7%';
 
-SELECT code FROM tbl_temp_generated_codes WHERE code NOT IN (SELECT DISTINCT ledger_account_code FROM
+-- SELECT * FROM tbl_temp_generated_codes;
+
+SELECT MIN(code) FROM tbl_temp_generated_codes WHERE `code` > CONCAT(@prefix, LPAD(420,3,'0')) AND `code` NOT IN (SELECT DISTINCT ledger_account_code FROM
 (SELECT ledger_account_code FROM tbl_ledger_accounts
 UNION SELECT ledger_account_id FROM tbl_ledger_accounts
 UNION SELECT supplier_id FROM tbl_suppliers
 UNION SELECT supplier_code FROM tbl_suppliers) A
-WHERE ledger_account_code LIKE CONCAT(@prefix,'%')) LIMIT 1;
+WHERE ledger_account_code LIKE CONCAT(@prefix,'%')); -- LIMIT 1;
 
 DROP TABLE IF EXISTS tbl_supplier_codes;
 DROP TABLE IF EXISTS tbl_temp_nums;

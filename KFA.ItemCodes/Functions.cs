@@ -200,9 +200,8 @@ namespace KFA.ItemCodes
 
                     if (sleepTime > 0) Thread.Sleep(sleepTime);
 
-                    await (dispatcher ?? Dispatcher.UIThread)
-                    .InvokeAsync(ax, DispatcherPriority.ApplicationIdle)
-                    .ConfigureAwait(false);
+                    await (dispatcher ?? Dispatcher.UIThread)?
+                    .InvokeAsync(ax, DispatcherPriority.ApplicationIdle);
                 }
                 catch (Exception ex)
                 {

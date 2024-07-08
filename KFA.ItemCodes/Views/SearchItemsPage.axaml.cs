@@ -84,7 +84,7 @@ namespace KFA.ItemCodes.Views
                 var dgItems = this.FindControl<DataGrid>("DgItems");
                 var code = this.FindControl<AutoCompleteBox>("TxtSearch").Text;
                 var items = ItemChecker.SearchItemForward(code, ItemCodes);
-                dgItems.Items = items.Select(v => new
+                dgItems.ItemsSource = items.Select(v => new
                 {
                     v.itemFrom,
                     v.itemTo,
@@ -106,7 +106,7 @@ namespace KFA.ItemCodes.Views
             {
                 var code = this.FindControl<AutoCompleteBox>("TxtSearch").Text;
                 var items = ItemChecker.SearchItemBackward(code, ItemCodes);
-                this.FindControl<DataGrid>("DgItems").Items = items.Select(v => new
+                this.FindControl<DataGrid>("DgItems").ItemsSource = items.Select(v => new
                 {
                     v.itemFrom,
                     v.itemTo,
