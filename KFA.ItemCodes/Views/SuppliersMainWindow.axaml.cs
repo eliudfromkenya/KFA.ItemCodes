@@ -33,16 +33,16 @@ namespace KFA.ItemCodes.Views
         private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
         private void IsActivated(CompositeDisposable disposable)
         {
-            this.FindControl<Button>("CloseButton")
+            this.FindControl<Button>("CloseButton")!
                .Events().Click.Subscribe(cc =>
                {
-				   DbService.Logout();
-				   App.MainWindow.Close();
+                   DbService.Logout();
+                   App.MainWindow.Close();
                }).DisposeWith(disposable);
 
-			ViewModel.CanUpdate = Views.MainWindow.CanUpdateData;
+            ViewModel.CanUpdate = Views.MainWindow.CanUpdateData;
 
-			var searchCtrl = this.FindControl<AutoCompleteBox>("TxtSearch");
+            var searchCtrl = this.FindControl<AutoCompleteBox>("TxtSearch");
             var rbNormalSearch = this.FindControl<RadioButton>("rbNormalSearch");
             var rbAdvSearch = rbAdvancedSearch = this.FindControl<RadioButton>("rbAdvancedSearch");
             var dgSuppliers = this.FindControl<DataGrid>("DgSuppliers");
@@ -53,55 +53,55 @@ namespace KFA.ItemCodes.Views
             if (txtBranchCode != null)
             {
                 var last = "";
-               txtBranchCode.Events().TextChanged
-                    .Throttle(TimeSpan.FromMilliseconds(300))
-                    .Subscribe(tt => Functions.RunOnMain(() =>
-                    {
-                        try
-                        {
-                            var txt = txtBranchCode.Text;
-                            if (txt == last)
-                                return;
+                txtBranchCode.Events().TextChanged
+                     .Throttle(TimeSpan.FromMilliseconds(300))
+                     .Subscribe(tt => Functions.RunOnMain(() =>
+                     {
+                         try
+                         {
+                             var txt = txtBranchCode.Text;
+                             if (txt == last)
+                                 return;
 
-                            if(branches == null)
-                                if (MainSupplierWindowViewModel.Branches != null)
-                                {
-                                    branches = MainSupplierWindowViewModel.Branches
-                                       .ToList();
-                                }
+                             if (branches == null)
+                                 if (MainSupplierWindowViewModel.Branches != null)
+                                 {
+                                     branches = MainSupplierWindowViewModel.Branches
+                                        .ToList();
+                                 }
 
 
-                            if (txt?.Length > 3)
-                            {
-                                MainSupplierWindowViewModel.nextId = null;
-                                var branchCode = txt?[..4];
-                                var br = MainSupplierWindowViewModel.CurrentBranch = branches?.First(c => c?.Code == branchCode);
-                                if (br != null)
-                                {
-                                    lblBranchName.Content = br?.BranchName;
-                                    ReloadDataGrid(rbAdvancedSearch?.IsChecked ?? false);
-                                    LoadNextId(br);
-                                //    if (branches != null)
-                                //        if (DataContext is MainSupplierWindowViewModel vm)
-                                //        {
-                                //            dgSuppliers.Items =
-                                //                vm.Models.Where(n => n.Code?
-                                //                .StartsWith(br?.Prefix ?? "") ?? false)
-                                //                .ToList();
-                                //       }
-                                }
-                                else lblBranchName.Content = txt?[4..];
+                             if (txt?.Length > 3)
+                             {
+                                 MainSupplierWindowViewModel.nextId = null;
+                                 var branchCode = txt?[..4];
+                                 var br = MainSupplierWindowViewModel.CurrentBranch = branches?.First(c => c?.Code == branchCode);
+                                 if (br != null)
+                                 {
+                                     lblBranchName.Content = br?.BranchName;
+                                     ReloadDataGrid(rbAdvancedSearch?.IsChecked ?? false);
+                                     LoadNextId(br);
+                                     //    if (branches != null)
+                                     //        if (DataContext is MainSupplierWindowViewModel vm)
+                                     //        {
+                                     //            dgSuppliers.Items =
+                                     //                vm.Models.Where(n => n.Code?
+                                     //                .StartsWith(br?.Prefix ?? "") ?? false)
+                                     //                .ToList();
+                                     //       }
+                                 }
+                                 else lblBranchName.Content = txt?[4..];
 
-                                txtBranchCode.Text = branchCode;
-                            }
-                        }
-                        catch { }
-                        try
-                        {
-                            ReloadData(rbAdvancedSearch?.IsChecked);
-                        }
-                        catch { }
-                    }));
+                                 txtBranchCode.Text = branchCode;
+                             }
+                         }
+                         catch { }
+                         try
+                         {
+                             ReloadData(rbAdvancedSearch?.IsChecked);
+                         }
+                         catch { }
+                     }));
             }
 
             void ReloadDataGrid(bool? advancedSearch = null)
@@ -128,8 +128,8 @@ namespace KFA.ItemCodes.Views
                         if (branches != null)
                             if (DataContext is MainSupplierWindowViewModel vm)
                             {
-                               models = new System.Collections.ObjectModel.ObservableCollection<SupplierCode>(  vm.Models.Where(n => n.Code?
-                                    .StartsWith(br?.Prefix ?? "") ?? false));
+                                models = new System.Collections.ObjectModel.ObservableCollection<SupplierCode>(vm.Models.Where(n => n.Code?
+                                     .StartsWith(br?.Prefix ?? "") ?? false));
                             }
                     }
 
@@ -177,17 +177,17 @@ namespace KFA.ItemCodes.Views
             try
             {
                 Functions.RunOnBackground(() =>
-               {
-                   var prefix = br?.Prefix;
-                   if (prefix?.Length < 3)
-                       return;
-                   try
-                   {
-					   //                       var sql = $@"SELECT MAX(CAST(SUBSTR(code, 4) AS UNSIGNED))+1 num FROM
-					   //(SELECT supplier_code code FROM tbl_suppliers UNION SELECT ledger_account_code code FROM tbl_ledger_accounts) A
-					   //WHERE code LIKE '{prefix}%' AND code NOT LIKE '{prefix}7%' AND LENGTH(code) = 6 AND code != '{prefix}499'";
+                {
+                    var prefix = br?.Prefix;
+                    if (prefix?.Length < 3)
+                        return;
+                    try
+                    {
+                        //                       var sql = $@"SELECT MAX(CAST(SUBSTR(code, 4) AS UNSIGNED))+1 num FROM
+                        //(SELECT supplier_code code FROM tbl_suppliers UNION SELECT ledger_account_code code FROM tbl_ledger_accounts) A
+                        //WHERE code LIKE '{prefix}%' AND code NOT LIKE '{prefix}7%' AND LENGTH(code) = 6 AND code != '{prefix}499'";
 
-					   var sql = $@"DROP TABLE IF EXISTS tbl_supplier_codes;
+                        var sql = $@"DROP TABLE IF EXISTS tbl_supplier_codes;
 DROP TABLE IF EXISTS tbl_temp_nums;
 DROP TABLE IF EXISTS tbl_temp_generated_codes;
 
@@ -212,38 +212,41 @@ FROM tbl_temp_nums  AS t1 CROSS JOIN tbl_temp_nums AS t2
   CROSS JOIN tbl_temp_nums AS t4
 ) t;
 
+-- DELETE FROM tbl_supplier_codes WHERE Digit <= 420;
 
-CREATE TEMPORARY TABLE tbl_temp_generated_codes AS SELECT CONCAT(@prefix, LPAD(Digit,3,'0')) code FROM tbl_supplier_codes WHERE Digit > 450 AND Digit <> 499 AND Digit NOT LIKE '7%';
+CREATE TEMPORARY TABLE tbl_temp_generated_codes AS SELECT DISTINCT CONCAT(@prefix, LPAD(Digit,3,'0')) `code` FROM tbl_supplier_codes WHERE Digit > 450 AND Digit <> 499 AND Digit NOT LIKE '7%';
 
-SELECT code FROM tbl_temp_generated_codes WHERE code NOT IN (SELECT DISTINCT ledger_account_code FROM
+-- SELECT * FROM tbl_temp_generated_codes;
+
+SELECT MIN(code) FROM tbl_temp_generated_codes WHERE `code` > CONCAT(@prefix, LPAD(420,3,'0')) AND `code` NOT IN (SELECT DISTINCT ledger_account_code FROM
 (SELECT ledger_account_code FROM tbl_ledger_accounts
 UNION SELECT ledger_account_id FROM tbl_ledger_accounts
 UNION SELECT supplier_id FROM tbl_suppliers
 UNION SELECT supplier_code FROM tbl_suppliers) A
-WHERE ledger_account_code LIKE CONCAT(@prefix,'%')) LIMIT 1;
+WHERE ledger_account_code LIKE CONCAT(@prefix,'%')); -- LIMIT 1;
 
 DROP TABLE IF EXISTS tbl_supplier_codes;
 DROP TABLE IF EXISTS tbl_temp_nums;
 DROP TABLE IF EXISTS tbl_temp_generated_codes;
 ";
-                       var code = SupplierDbService.GetMySqlScalar(sql)?.ToString();
-					   if (int.TryParse(code, out int mm) && mm > 0)
-                       {
-                           if (mm < 800 && mm > 699)
-                               mm = 800;
-                           MainSupplierWindowViewModel.nextId = $"{prefix}{mm:000}";
-                       }
-                       else
-                       {
-						   MainSupplierWindowViewModel.nextId = code;
-					   }
+                        var code = SupplierDbService.GetMySqlScalar(sql)?.ToString();
+                        if (int.TryParse(code, out int mm) && mm > 0)
+                        {
+                            if (mm < 800 && mm > 699)
+                                mm = 800;
+                            MainSupplierWindowViewModel.nextId = $"{prefix}{mm:000}";
+                        }
+                        else
+                        {
+                            MainSupplierWindowViewModel.nextId = code;
+                        }
 
-                   }
-                   catch (Exception ex)
-                   {
-                       Functions.NotifyError(ex);
-                   }
-               });
+                    }
+                    catch (Exception ex)
+                    {
+                        Functions.NotifyError(ex);
+                    }
+                });
             }
             catch (Exception)
             {
